@@ -91,8 +91,11 @@ class Package:
 		deps2 = info["Package"]["Dependencies"].split(",")
 		deps = []
 		for dep in deps2:
-			deps.extend(dep.split("|"))
-		deps = parse_deps(deps)
+			if len(dep.split("|")) != 1:
+				# We have an OR situation here...
+				deps.append(OR([Dependency.parse(dep.lstrip().rstrip()) for dep in dep.split("|")]))
+			else:
+				deps.append(Dependency.parse(dep))
 		print(deps)
 		pkgs = deps_to_pkgs(deps)
 
@@ -171,6 +174,9 @@ class OR:
 			if dep.satisfied_by(version):
 				return True
 		return False
+
+	def __repr__(self):
+		return f"OR({self.deps})"
 
 
 def get_deb_info(path: str) -> dict:
