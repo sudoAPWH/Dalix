@@ -88,6 +88,8 @@ class Package:
 		:returns list(Packages):
 		"""
 		info = self.get_info()
+		if info["Package"]["Dependencies"].rstrip().lstrip() == "":
+			return []
 		deps2 = info["Package"]["Dependencies"].split(",")
 		deps = []
 		for dep in deps2:
@@ -96,9 +98,11 @@ class Package:
 				deps.append(OR([Dependency.parse(dep.lstrip().rstrip()) for dep in dep.split("|")]))
 			else:
 				deps.append(Dependency.parse(dep))
-		print(deps)
 		pkgs = deps_to_pkgs(deps)
 
+		assert type(pkgs) == list
+		for pkg in pkgs:
+			assert type(pkg) == Package
 		return pkgs
 
 	def __repr__(self):
@@ -134,7 +138,7 @@ class Dependency:
 		return True
 
 	def __repr__(self):
-		return f"Dependency({self.name}, {self.comparisons}, {self.versions})"
+		return f"Dependency(\"{self.name}\", {self.comparisons}, {self.versions})"
 
 	def parse(dep: str):
 		"""
@@ -150,6 +154,7 @@ class Dependency:
 
 		:returns Dependency:
 		"""
+		assert type(dep) == str
 		if "(" in dep:
 			name, constraint = dep.split("(", 1)
 			name = name.rstrip().lstrip()
@@ -544,11 +549,16 @@ def deps_to_pkgs(deps_info: list) -> list:
 	"""
 	assert type(deps_info) == list
 	for d in deps_info:
-		assert type(d) == Dependency
+		assert type(d) == Dependency or type(d) == OR
 	pkg_deps = []
 
 	for dep in deps_info:
-		pkgs = list(search_pkg_list(dep.name, strict=True))
+		if type(dep) == Dependency:
+			pkgs = list(search_pkg_list(dep.name, strict=True))
+		elif type(dep) == OR:
+			pkgs = []
+			for d in dep.deps:
+				pkgs.extend(list(search_pkg_list(d.name, strict=True)))
 		if not pkgs:
 			raise ValueError(f"Could not find dependency \"{dep}\"")
 
@@ -646,45 +656,42 @@ def occurence_count(l: list) -> dict:
 	return r
 
 
-def fill_dep_tree(dep, ignore_list=[]) -> list:
+def fill_dep_tree(pkg, ignore_list=[]) -> list:
 	"""
 	Returns a list of all dependencies required for the container from a list of all the
 	dependenecies that are specified by the caller.
 
-	:param deps: A Dependency object
+	:param deps: A Package object
 	:return list(Package): A list of all dependencies required for the dependency
 	"""
-	assert type(dep) == Dependency
+	assert type(pkg) == Package
 	assert type(ignore_list) == list
 
 	output = []
-	# Package
-	dep = deps_to_pkgs([Dependency.parse(dep)])[0] # ;)
 
-	if dep in ignore_list:
+	if pkg in ignore_list:
 		return []
 	# Package
-	output.append(dep)
+	output.append(pkg)
 
-	for child in dep.get_deps(): # Packages
+	for child in pkg.get_deps(): # Packages
 		if child not in ignore_list:
-			print(child)
-			print(child.get_deps())
-			output.extend(fill_dep_tree(child.get_deps(), ignore_list=output))
+			output.extend(fill_dep_tree(child, ignore_list=output))
 
 	assert type(output) == list
 	for out in output:
 		assert type(out) == Package
 	return output
 
-def fill_dep_tree_from_list(deps: list) -> list:
+def fill_dep_tree_from_list(pkgs: list) -> list:
 	"""
+	:param deps: A list of Packages
 	:return list(Package):
 	"""
-	assert type(deps) == list
+	assert type(pkgs) == list
 	output = []
-	for dep in deps:
-		output.extend(fill_dep_tree(dep, ignore_list=output))
+	for pkg in pkgs:
+		output.extend(fill_dep_tree(pkg, ignore_list=output))
 	assert type(output) == list
 	for out in output:
 		assert type(out) == Package
@@ -717,10 +724,10 @@ def generate_bwrap_args(deps: list) -> list:
 	# generate list of packages that need to be included
 
 	# Parse list of dependencies
-	# deps_info = parse_deps(deps)
+	deps_parsed = parse_deps(deps)
 
 	# Get list of packages from list of dependencies
-	# deps = deps_to_pkgs(deps_info)
+	deps = deps_to_pkgs(deps_parsed)
 	deps = fill_dep_tree_from_list(deps)
 
 	# item_t = namedtuple('item_t', ['bwrap_loc', 'fullpath', 'pkg', "occurences"])
