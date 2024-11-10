@@ -73,7 +73,6 @@ class Package:
 		then loads the metadata from the pkg-info file using the TOML format and returns
 		it as a dictionary.
 
-		:param path: The path to the package directory containing the pkg-info file.
 		:return: A dictionary containing the package metadata.
 		:raises AssertionError: If the package directory or pkg-info file does not exist.
 		"""
@@ -85,6 +84,9 @@ class Package:
 		return info
 
 	def get_deps(self) -> list:
+		"""
+		:returns list(Packages):
+		"""
 		info = self.get_info()
 		deps = info["Package"]["Dependencies"].split(",")
 		deps = get_deps_info(deps)
@@ -138,6 +140,8 @@ class Dependency:
 
 		For example, if given the input "pkg1 (>= 2.1.0)", the output will be:
 			Dependency("pkg1", ">=", "2.1.0")
+
+		:returns Dependency:
 		"""
 		if "(" in dep:
 			name, constraint = dep.split("(", 1)
@@ -162,6 +166,7 @@ def get_deb_info(path: str) -> dict:
 
 	:raises ValueError: The package's control file is invalid.
 	:raises FileNotFoundError: The package does not exist.
+	:returns dict:
 	"""
 	assert os.path.exists(path), "Supplied path does not exist!"
 	with TemporaryDirectory() as tmpdir:
@@ -198,6 +203,7 @@ def deb_to_pkg_info(info: dict) -> dict:
 	that can be written to a pkg-info file.
 
 	:raises ValueError: If the control file is invalid
+	:returns dict:
 	"""
 	pkg_info = {
 		"InfoType": 1,
@@ -323,6 +329,13 @@ def install_deb(path: str, fetch_dependencies: bool = True):
 			install_deps_for_pkg(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
 
 def install_deps(dep_string: str):
+	"""
+	Downloads and installs all dependencies specified in dep_string.
+
+	:raises FileNotFoundError: Apt-get failed to download the specified package.
+	:raises Exception: Any other exception will be raised if the install fails.
+	:param dep_string: A string of dependencies to install
+	"""
 	cmd = "apt-get satisfy --download-only"
 	with TemporaryDirectory() as tmpdir:
 		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
@@ -338,12 +351,15 @@ def install_deps(dep_string: str):
 				print(e)
 				continue
 
-def install_loose(dep_string: str):
+def install_loose(pkg: str):
+	"""
+	:param str: A string repersenting the package to install
+	"""
 	cmd = "apt-get install --download-only --reinstall"
 	with TemporaryDirectory() as tmpdir:
-		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
-		deps = os.listdir(tmpdir)
-		for pkg in deps:
+		os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={tmpdir} -y")
+		pkgs = os.listdir(tmpdir)
+		for pkg in pkgs:
 			if pkg[-4:] != ".deb":
 				continue
 			log(f"Going to install {pkg}...")
@@ -357,6 +373,7 @@ def install_deps_for_pkg(pkg: Package):
 	"""
 	Fetches the dependencies of a package from debian's servers.
 	We make apt do the heavy lifting
+	:param Package: A package to install dependencies for.
 	"""
 
 	deps = []
@@ -371,7 +388,8 @@ def install_deps_for_pkg(pkg: Package):
 
 def get_pkg_list():
 	"""
-	Yields a list of all packages in the system.
+	Yields a list of all packages in the system
+	:return list(Package):
 	"""
 	packages = os.listdir(f"{root}/System/Packages")
 	for pkg in packages:
@@ -397,7 +415,7 @@ def search_pkg_list(name: str, strict=False):
 
 	:param name: The name or substring to search for in package names.
 	:param strict: A boolean indicating whether to perform a strict name match.
-	:return: Yields dictionaries representing matched packages.
+	:return yield Packages:
 	"""
 	global root
 
@@ -410,7 +428,6 @@ def search_pkg_list(name: str, strict=False):
 				yield pkg
 
 def get_pkg(name: str):
-	# We try to use the newest version availible to us.
 	"""
 	Returns the newest package matching the given name.
 
@@ -419,7 +436,7 @@ def get_pkg(name: str):
 	match the given name, it returns None.
 
 	:param name: The name of the package to search for.
-	:return: A dictionary representing the newest package with a matching name.
+	:return Package: The newest package matching the given name, or None if no packages match.
 	"""
 	candidates = list(search_pkg_list(name))
 	if not candidates: return None
@@ -452,7 +469,7 @@ def list_directory_tree(path: str) -> list:
 def get_deps_info(deps: list) -> list:
 	"""
 	Parses a list of dependencies and returns a
-	list of dep_info_t representing the parsed dependencies.
+	list of `Dependency` representing the parsed dependencies.
 
 	The dep_info_t structure has the following fields:
 		- name: The name of the package.
@@ -462,11 +479,14 @@ def get_deps_info(deps: list) -> list:
 	For example, if given the input ["pkg1 (>= 2.1.0)", "pkg2 (= 3.2.1)", "pkg3 (<= 4.3.2)", "pkg4"],
 	the output will be:
 	[
-		dep_info_t("pkg1", [">="], ["2.1.0"]),
-		dep_info_t("pkg2", ["="], ["3.2.1"]),
-		dep_info_t("pkg3", ["<="], ["4.3.2"]),
-		dep_info_t("pkg4", None, None)
+		Dependency("pkg1", [">="], ["2.1.0"]),
+		Dependency("pkg2", ["="], ["3.2.1"]),
+		Dependency("pkg3", ["<="], ["4.3.2"]),
+		Dependency("pkg4", None, None)
 	]
+
+	:param deps: A list of strings representing dependencies.
+	:return list(Dependency):
 	"""
 	deps_info = []
 	for dep in deps:
@@ -476,24 +496,11 @@ def get_deps_info(deps: list) -> list:
 
 def deps_to_pkgs(deps_info: list) -> list:
 	"""
-	Takes a list of Dependency objects and returns a list of Package objects representing the newest version
-	of each dependency that satisfies the dependency's comparison operators.
-
-	For example, if given the input
-	[
-		Dependency("pkg1", [">="], ["2.1.0"]),
-		Dependency("pkg2", ["="], ["3.2.1"]),
-		Dependency("pkg3", ["<="], ["4.3.2"]),
-		Dependency("pkg4", None, None)
-	],
-	the output will be a list of Package objects representing the newest version of each package that
-	satisfies the given comparison operators.
-
-	For example, if the newest version of "pkg1" is 2.2.0, the output would contain a Package object
- représentating the newest version of "pkg1" that satisfies ">=" 2.1.0, which is 2.2.0.
+	Takes a list of Dependency objects and returns a list of Package objects representing
+	the newest version of each dependency that satisfies the dependency's comparison operators.
 
 	:param deps_info: A list of Dependency objects.
-	:return: A list of Package objects.
+	:return list(Package):
 	"""
 	pkg_deps = []
 
@@ -517,6 +524,10 @@ def deps_to_pkgs(deps_info: list) -> list:
 	return pkg_deps
 
 def get_files_and_directories_from_pkgs(deps: list) -> list:
+	"""
+	:return list(item_t): A list of `item_t` objects representing the
+	files and directories in the given packages.
+	"""
 	class item_t:
 		def __init__(self, bwrap_loc, fullpath, pkg, occurences):
 			self.bwrap_loc = bwrap_loc
@@ -570,6 +581,14 @@ def get_files_and_directories_from_pkgs(deps: list) -> list:
 	return files, directories
 
 def occurence_count(l: list) -> dict:
+	"""
+	Returns a dictionary where the keys are the elements of the list and the values are the
+	number of occurances of each element in the list.
+
+	Example:
+		>>> occurence_count([1, 2, 3, 4, 4, 5])
+		{1: 1, 2: 1, 3: 1, 4: 2, 5: 1}
+	"""
 	return {x: l.count(x) for x in l}
 
 
@@ -579,13 +598,12 @@ def fill_dep_tree(dep, ignore_list=[]) -> list:
 	dependenecies that are specified by the caller.
 
 	:param deps: A list of dependencies required for the container.
-	:return: A list of all dependencies required for the container.
+	:return list(Package): A list of all dependencies required for the container.
 	"""
 
 	output = []
 	# Package
 	dep = deps_to_pkgs([Dependency.parse(dep)])[0] # ;)
-	children = []
 
 	if dep in ignore_list:
 		return []
@@ -600,6 +618,9 @@ def fill_dep_tree(dep, ignore_list=[]) -> list:
 	return output
 
 def fill_dep_tree_from_list(deps) -> list:
+	"""
+	:return list(Package):
+	"""
 	output = []
 	for dep in deps:
 		output.extend(fill_dep_tree(dep, ignore_list=output))
@@ -756,7 +777,7 @@ if args.install:
 	else:
 		install_deps(args.install)
 elif args.loose_install:
-
+	pass
 elif args.test:
 	args = generate_bwrap_args([
 		"neovim",

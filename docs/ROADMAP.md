@@ -9,5 +9,6 @@
 	- [x] launch bwrap with correct options
 		- [x] Mount base system readonly
 		- [x] Symlink required packages
-	- [ ] Fetch dependencies from debian's servers
+	- [x] Fetch dependencies from debian's servers
+	- [ ] Clean up code a bit
 	- [ ] Post install scripts
