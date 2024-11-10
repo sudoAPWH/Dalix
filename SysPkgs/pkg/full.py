@@ -88,8 +88,12 @@ class Package:
 		:returns list(Packages):
 		"""
 		info = self.get_info()
-		deps = info["Package"]["Dependencies"].split(",")
-		deps = get_deps_info(deps)
+		deps2 = info["Package"]["Dependencies"].split(",")
+		deps = []
+		for dep in deps2:
+			deps.extend(dep.split("|"))
+		deps = parse_deps(deps)
+		print(deps)
 		pkgs = deps_to_pkgs(deps)
 
 		return pkgs
@@ -158,6 +162,17 @@ class Dependency:
 		else:
 			return Dependency(dep, None, None)
 
+class OR:
+	def __init__(self, deps: list):
+		self.deps = deps
+
+	def satisfied_by(self, version: Version) -> bool:
+		for dep in self.deps:
+			if dep.satisfied_by(version):
+				return True
+		return False
+
+
 def get_deb_info(path: str) -> dict:
 	"""
 	Extracts metadata from a .deb package.
@@ -205,6 +220,7 @@ def deb_to_pkg_info(info: dict) -> dict:
 	:raises ValueError: If the control file is invalid
 	:returns dict:
 	"""
+	assert type(info) == dict
 	pkg_info = {
 		"InfoType": 1,
 		"Package": {}
@@ -223,6 +239,7 @@ def deb_to_pkg_info(info: dict) -> dict:
 			pkg_info["Package"]["Dependencies"] = ""
 	except KeyError:
 		raise ValueError("Invalid debian control file in package!")
+	assert type(pkg_info) == dict
 	return pkg_info
 
 def symlink(src: str, dst: str):
@@ -231,6 +248,8 @@ def symlink(src: str, dst: str):
 
 	Ensures that the directory of dest exists before creating the symlink.
 	"""
+
+	assert type(src) == str and type(dst) == str
 	os.makedirs(src, exist_ok=True)
 
 	dst_dir = os.path.dirname(dst)
@@ -275,6 +294,7 @@ def install_deb(path: str, fetch_dependencies: bool = True):
 	:raises FileNotFoundError: The package does not exist.
 	:raises AssertionError: The package's path does not end with .deb.
 	"""
+	assert type(path) == str and type(fetch_dependencies) == bool
 	global root
 
 	assert os.path.exists(path), "Supplied path does not exist!"
@@ -336,6 +356,7 @@ def install_deps(dep_string: str):
 	:raises Exception: Any other exception will be raised if the install fails.
 	:param dep_string: A string of dependencies to install
 	"""
+	assert type(dep_string) == str
 	cmd = "apt-get satisfy --download-only"
 	with TemporaryDirectory() as tmpdir:
 		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
@@ -355,6 +376,7 @@ def install_pkg_from_online(pkg: str):
 	"""
 	:param str: A string repersenting the package to install
 	"""
+	assert type(pkg) == str
 	cmd = "apt-get install --download-only --reinstall"
 	with TemporaryDirectory() as tmpdir:
 		os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={tmpdir} -y")
@@ -375,7 +397,7 @@ def install_deps_for_pkg(pkg: Package):
 	We make apt do the heavy lifting
 	:param Package: A package to install dependencies for.
 	"""
-
+	assert type(pkg) == Package
 	deps = []
 	print(pkg)
 	info = pkg.get_info()
@@ -402,6 +424,7 @@ def get_pkg_list():
 			Version(pkg_name[1]),
 			f"{root}/System/Packages/{pkg}"
 		)
+		assert type(pkg_ret) == Package
 		yield pkg_ret
 
 def search_pkg_list(name: str, strict=False):
@@ -417,14 +440,17 @@ def search_pkg_list(name: str, strict=False):
 	:param strict: A boolean indicating whether to perform a strict name match.
 	:return yield Packages:
 	"""
+	assert type(name) == str
 	global root
 
 	for pkg in get_pkg_list():
 		if strict:
 			if pkg.name == name:
+				assert type(pkg) == Package
 				yield pkg
 		else:
 			if name in pkg.name:
+				assert type(pkg) == Package
 				yield pkg
 
 def get_pkg(name: str):
@@ -438,6 +464,7 @@ def get_pkg(name: str):
 	:param name: The name of the package to search for.
 	:return Package: The newest package matching the given name, or None if no packages match.
 	"""
+	assert type(name) == str
 	candidates = list(search_pkg_list(name))
 	if not candidates: return None
 	newest = None
@@ -447,6 +474,7 @@ def get_pkg(name: str):
 		else:
 			if newest.version < candidate.version:
 				newest = candidate
+	assert type(newest) == Package
 	return newest
 
 def list_directory_tree(path: str) -> list:
@@ -456,17 +484,19 @@ def list_directory_tree(path: str) -> list:
 	:param path: The path to list the directory tree of.
 	:return: A list of all files and directories (recursively) in the given path.
 	"""
+	assert type(path) == str
 	files = []
 	for root, dirs, filenames in os.walk(path):
 		files.append(root)
 		files.extend(os.path.join(root, f) for f in filenames)
 	files.remove(path)
+	assert type(files) == list
 	return files
 
 
 
 
-def get_deps_info(deps: list) -> list:
+def parse_deps(deps: list) -> list:
 	"""
 	Parses a list of dependencies and returns a
 	list of `Dependency` representing the parsed dependencies.
@@ -488,10 +518,14 @@ def get_deps_info(deps: list) -> list:
 	:param deps: A list of strings representing dependencies.
 	:return list(Dependency):
 	"""
+	assert type(deps) == list
+	for dep in deps:
+		assert type(dep) == str
 	deps_info = []
 	for dep in deps:
 		deps_info.append(Dependency.parse(dep))
 
+	assert type(deps_info) == list
 	return deps_info
 
 def deps_to_pkgs(deps_info: list) -> list:
@@ -502,6 +536,9 @@ def deps_to_pkgs(deps_info: list) -> list:
 	:param deps_info: A list of Dependency objects.
 	:return list(Package):
 	"""
+	assert type(deps_info) == list
+	for d in deps_info:
+		assert type(d) == Dependency
 	pkg_deps = []
 
 	for dep in deps_info:
@@ -521,13 +558,19 @@ def deps_to_pkgs(deps_info: list) -> list:
 			raise ValueError(f"Could not find dependency \"{dep.name}\"")
 		pkg_deps.append(best)
 
+	assert type(pkg_deps) == list
 	return pkg_deps
 
-def get_files_and_directories_from_pkgs(deps: list) -> list:
+def get_files_and_directories_from_pkgs(deps: list):
 	"""
+	:param deps: A list of `Package` objects.
 	:return list(item_t): A list of `item_t` objects representing the
 	files and directories in the given packages.
 	"""
+	assert type(deps) == list
+	for dep in deps:
+		assert type(dep) == Package
+
 	class item_t:
 		def __init__(self, bwrap_loc, fullpath, pkg, occurences):
 			self.bwrap_loc = bwrap_loc
@@ -578,6 +621,8 @@ def get_files_and_directories_from_pkgs(deps: list) -> list:
 	for file,occ in zip(files, files_occ):
 		file.occurences = files_occ[occ]
 
+	assert type(directories) == list
+	assert type(files) == list
 	return files, directories
 
 def occurence_count(l: list) -> dict:
@@ -586,10 +631,13 @@ def occurence_count(l: list) -> dict:
 	number of occurances of each element in the list.
 
 	Example:
-		>>> occurence_count([1, 2, 3, 4, 4, 5])
-		{1: 1, 2: 1, 3: 1, 4: 2, 5: 1}
+		>>> occurence_count([1, 1, 2, 3, 4, 4, 5])
+		{1: 2, 2: 1, 3: 1, 4: 2, 5: 1}
 	"""
-	return {x: l.count(x) for x in l}
+	assert type(l) == list
+	r = {x: l.count(x) for x in l}
+	assert type(r) == dict
+	return r
 
 
 def fill_dep_tree(dep, ignore_list=[]) -> list:
@@ -600,10 +648,12 @@ def fill_dep_tree(dep, ignore_list=[]) -> list:
 	:param deps: A Dependency object
 	:return list(Package): A list of all dependencies required for the dependency
 	"""
+	assert type(dep) == Dependency
+	assert type(ignore_list) == list
 
 	output = []
 	# Package
-	dep = deps_to_pkgs([dep])[0] # ;)
+	dep = deps_to_pkgs([Dependency.parse(dep)])[0] # ;)
 
 	if dep in ignore_list:
 		return []
@@ -613,17 +663,25 @@ def fill_dep_tree(dep, ignore_list=[]) -> list:
 	for child in dep.get_deps(): # Packages
 		if child not in ignore_list:
 			print(child)
+			print(child.get_deps())
 			output.extend(fill_dep_tree(child.get_deps(), ignore_list=output))
 
+	assert type(output) == list
+	for out in output:
+		assert type(out) == Package
 	return output
 
-def fill_dep_tree_from_list(deps) -> list:
+def fill_dep_tree_from_list(deps: list) -> list:
 	"""
 	:return list(Package):
 	"""
+	assert type(deps) == list
 	output = []
 	for dep in deps:
 		output.extend(fill_dep_tree(dep, ignore_list=output))
+	assert type(output) == list
+	for out in output:
+		assert type(out) == Package
 	return output
 
 
@@ -653,7 +711,7 @@ def generate_bwrap_args(deps: list) -> list:
 	# generate list of packages that need to be included
 
 	# Parse list of dependencies
-	deps_info = get_deps_info(deps)
+	# deps_info = parse_deps(deps)
 
 	# Get list of packages from list of dependencies
 	# deps = deps_to_pkgs(deps_info)
@@ -669,7 +727,6 @@ def generate_bwrap_args(deps: list) -> list:
 	# for each directory...
 	# if occurence count = 1, symlink
 	# if occurence count > 1, create directory
-
 	symlinked = []
 	for dir in directories:
 		if dir.occurences == 1:
