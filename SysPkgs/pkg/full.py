@@ -351,7 +351,7 @@ def install_deps(dep_string: str):
 				print(e)
 				continue
 
-def install_loose(pkg: str):
+def install_pkg_from_online(pkg: str):
 	"""
 	:param str: A string repersenting the package to install
 	"""
@@ -367,7 +367,7 @@ def install_loose(pkg: str):
 				install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
 			except Exception as e:
 				log(f"Failed to install {pkg}! Skipping for now...", WARNING)
-				print(e)
+				log(e, WARNING)
 				continue
 def install_deps_for_pkg(pkg: Package):
 	"""
@@ -747,7 +747,7 @@ parser.add_argument(
 	'-r',
 	'--root',
 	help='Root directory of the system',
-	default='/home/derek/Code/dalixOS/Tests/testroot'
+	default=''
 )
 parser.add_argument(
 	'-i',
@@ -775,9 +775,7 @@ if args.install:
 	if args.install.startswith("./"):
 		install_deb(args.install)
 	else:
-		install_deps(args.install)
-elif args.loose_install:
-	pass
+		install_pkg_from_online(args.install)
 elif args.test:
 	args = generate_bwrap_args([
 		"neovim",
