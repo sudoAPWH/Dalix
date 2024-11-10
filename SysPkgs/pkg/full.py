@@ -597,13 +597,13 @@ def fill_dep_tree(dep, ignore_list=[]) -> list:
 	Returns a list of all dependencies required for the container from a list of all the
 	dependenecies that are specified by the caller.
 
-	:param deps: A list of dependencies required for the container.
-	:return list(Package): A list of all dependencies required for the container.
+	:param deps: A Dependency object
+	:return list(Package): A list of all dependencies required for the dependency
 	"""
 
 	output = []
 	# Package
-	dep = deps_to_pkgs([Dependency.parse(dep)])[0] # ;)
+	dep = deps_to_pkgs([dep])[0] # ;)
 
 	if dep in ignore_list:
 		return []
@@ -613,7 +613,7 @@ def fill_dep_tree(dep, ignore_list=[]) -> list:
 	for child in dep.get_deps(): # Packages
 		if child not in ignore_list:
 			print(child)
-			output.extend(child.get_deps(), ignore_list=output)
+			output.extend(fill_dep_tree(child.get_deps(), ignore_list=output))
 
 	return output
 
@@ -639,7 +639,7 @@ def generate_bwrap_args(deps: list) -> list:
 	deps should be passed in a form of
 	["pkg1==2.1.0", "pkg2>=3.2.1", "pkg3<=4.3.2"]
 
-	:param deps: A list of dependencies required for the container.
+	:param deps: A list of dependency strings
 	:return: A list of bubblewrap arguments for container setup.
 	"""
 	global root
