@@ -600,7 +600,7 @@ def get_files_and_directories_from_pkgs(deps: list):
 	directories = []
 	files = []
 	for dep in deps:
-		# for each dependency...
+		# for each Package...
 		dep_root = os.path.join(dep.path, "chroot")
 		dep_contents = list_directory_tree(dep_root)
 		for dep_item in dep_contents:
@@ -625,17 +625,19 @@ def get_files_and_directories_from_pkgs(deps: list):
 	# files, and directories are all of type item_t
 	# so we need to convert them to their bwrap location
 
-	directories_bwrap_locations = [x.bwrap_loc for x in directories]
-	files_bwrap_locations = [x.bwrap_loc for x in files]
+	directories_bwrap_locations = list([x.bwrap_loc for x in directories])
+	files_bwrap_locations = list([x.bwrap_loc for x in files])
 
 	dirs_occ = occurence_count(directories_bwrap_locations)
 	files_occ = occurence_count(files_bwrap_locations)
 
 	for dir,occ in zip(directories, dirs_occ):
-		dir.occurences = dirs_occ[occ]
+		dir.occurences = dirs_occ[dir.bwrap_loc]
+		if dir.occurences == None:
+			log(f"No occurences for {dir.bwrap_loc}", WARNING)
 
 	for file,occ in zip(files, files_occ):
-		file.occurences = files_occ[occ]
+		file.occurences = files_occ[file.bwrap_loc]
 
 	assert type(directories) == list
 	assert type(files) == list
@@ -742,6 +744,9 @@ def generate_bwrap_args(deps: list) -> list:
 	# if occurence count > 1, create directory
 	symlinked = []
 	for dir in directories:
+		if dir.occurences == None:
+			log(dir, ERROR)
+			continue
 		if dir.occurences == 1:
 			# Everything is mounted within / so we don't have to worry about root inside the
 			# container. But outside of the container we do. therfore, src_path must be to
