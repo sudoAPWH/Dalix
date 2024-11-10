@@ -10,5 +10,5 @@
 		- [x] Mount base system readonly
 		- [x] Symlink required packages
 	- [x] Fetch dependencies from debian's servers
-	- [ ] Clean up code a bit
+	- [x] Clean up code a bit
 	- [ ] Post install scripts
