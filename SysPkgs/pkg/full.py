@@ -61,6 +61,8 @@ class Package:
 		self.path = path
 
 	def __eq__(self, other):
+		if type(other) != Package:
+			return False
 		return self.name == other.name and self.version == other.version and self.path == other.path
 
 	def get_info(self) -> dict:
@@ -84,7 +86,8 @@ class Package:
 
 	def get_deps(self) -> list:
 		info = self.get_info()
-		deps = info["dependencies"]
+		deps = info["Package"]["Dependencies"].split(",")
+		deps = get_deps_info(deps)
 		pkgs = deps_to_pkgs(deps)
 
 		return pkgs
@@ -99,6 +102,10 @@ class Dependency:
 		self.versions = versions
 
 	def satisfied_by(self, version: Version) -> bool:
+		if self.versions == None:
+			return True
+		if self.comparisons == None:
+			return True
 		for comparison, needed_ver in zip(self.comparisons, self.versions):
 			if comparison == "=":
 				if Version(needed_ver) != Version(version):
@@ -116,6 +123,9 @@ class Dependency:
 				if Version(needed_ver) <= Version(version):
 					return False
 		return True
+
+	def __repr__(self):
+		return f"Dependency({self.name}, {self.comparisons}, {self.versions})"
 
 	def parse(dep: str):
 		"""
@@ -313,7 +323,7 @@ def install_deb(path: str, fetch_dependencies: bool = True):
 			install_deps_for_pkg(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
 
 def install_deps(dep_string: str):
-	cmd = "apt satisfy --download-only"
+	cmd = "apt-get satisfy --download-only"
 	with TemporaryDirectory() as tmpdir:
 		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
 		deps = os.listdir(tmpdir)
@@ -325,6 +335,22 @@ def install_deps(dep_string: str):
 				install_deb(f"{tmpdir}/{dep}", fetch_dependencies=False)
 			except Exception as e:
 				log(f"Failed to install {dep}! Skipping for now...", WARNING)
+				print(e)
+				continue
+
+def install_loose(dep_string: str):
+	cmd = "apt-get install --download-only --reinstall"
+	with TemporaryDirectory() as tmpdir:
+		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
+		deps = os.listdir(tmpdir)
+		for pkg in deps:
+			if pkg[-4:] != ".deb":
+				continue
+			log(f"Going to install {pkg}...")
+			try:
+				install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
+			except Exception as e:
+				log(f"Failed to install {pkg}! Skipping for now...", WARNING)
 				print(e)
 				continue
 def install_deps_for_pkg(pkg: Package):
@@ -474,11 +500,15 @@ def deps_to_pkgs(deps_info: list) -> list:
 	for dep in deps_info:
 		pkgs = list(search_pkg_list(dep.name, strict=True))
 		if not pkgs:
-			raise ValueError(f"Could not find dependency \"{dep.name}\"")
+			raise ValueError(f"Could not find dependency \"{dep}\"")
 
 		best = None
 		for pkg in pkgs:
-			if pkg.version > best.version and dep.satisfied_by(pkg.version):
+			if best == None and dep.satisfied_by(pkg.version):
+				best = pkg
+			elif best == None:
+				continue
+			elif pkg.version > best.version and dep.satisfied_by(pkg.version):
 				best = pkg
 		if best == None:
 			raise ValueError(f"Could not find dependency \"{dep.name}\"")
@@ -486,7 +516,7 @@ def deps_to_pkgs(deps_info: list) -> list:
 
 	return pkg_deps
 
-def get_files_and_directories_from_deps(deps: list) -> list:
+def get_files_and_directories_from_pkgs(deps: list) -> list:
 	class item_t:
 		def __init__(self, bwrap_loc, fullpath, pkg, occurences):
 			self.bwrap_loc = bwrap_loc
@@ -553,15 +583,27 @@ def fill_dep_tree(dep, ignore_list=[]) -> list:
 	"""
 
 	output = []
-	dep = deps_to_pkgs([dep])[0] # ;)
+	# Package
+	dep = deps_to_pkgs([Dependency.parse(dep)])[0] # ;)
 	children = []
 
 	if dep in ignore_list:
 		return []
+	# Package
+	output.append(dep)
 
-	for child in dep.get_deps():
+	for child in dep.get_deps(): # Packages
 		if child not in ignore_list:
-			pass
+			print(child)
+			output.extend(child.get_deps(), ignore_list=output)
+
+	return output
+
+def fill_dep_tree_from_list(deps) -> list:
+	output = []
+	for dep in deps:
+		output.extend(fill_dep_tree(dep, ignore_list=output))
+	return output
 
 
 
@@ -593,13 +635,13 @@ def generate_bwrap_args(deps: list) -> list:
 	deps_info = get_deps_info(deps)
 
 	# Get list of packages from list of dependencies
-	deps = deps_to_pkgs(deps_info)
-	deps = fill_dep_tree(deps)
+	# deps = deps_to_pkgs(deps_info)
+	deps = fill_dep_tree_from_list(deps)
 
 	# item_t = namedtuple('item_t', ['bwrap_loc', 'fullpath', 'pkg', "occurences"])
 
 	# Get list of files and directories from list of dependencies
-	files, directories = get_files_and_directories_from_deps(deps)
+	files, directories = get_files_and_directories_from_pkgs(deps)
 
 	# We need to follow the rules defined in Pkgs.md
 
@@ -713,6 +755,8 @@ if args.install:
 		install_deb(args.install)
 	else:
 		install_deps(args.install)
+elif args.loose_install:
+
 elif args.test:
 	args = generate_bwrap_args([
 		"neovim",
