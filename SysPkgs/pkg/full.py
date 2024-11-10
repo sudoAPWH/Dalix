@@ -11,6 +11,7 @@ from shutil import copytree, copyfile
 import termcolor
 from termcolor import colored
 import sys
+from collections import Counter
 # from semver.version import Version
 
 # Dependency = namedtuple('dep_info_t', ['name', 'comparison', 'version'])
@@ -24,13 +25,13 @@ ERROR = 3
 
 def log(msg: str, level: int = 0):
 	if level == GOOD:
-		print(f"[{colored('+', 'green')}] {msg}")
+		print(f"[{colored('+', 'green')}] {msg}", file=sys.stderr)
 	elif level == INFO:
-		print(f"[{colored('*', 'blue')}] {msg}")
+		print(f"[{colored('*', 'blue')}] {msg}", file=sys.stderr)
 	elif level == WARNING:
-		print(f"[{colored('!', 'yellow')}] {msg}")
+		print(f"[{colored('!', 'yellow')}] {msg}", file=sys.stderr)
 	elif level == ERROR:
-		print(f"[{colored('X', 'red')}] {msg}")
+		print(f"[{colored('X', 'red')}] {msg}", file=sys.stderr)
 
 class Version:
 	def __init__(self, version: str):
@@ -277,17 +278,16 @@ def init_system():
 	and finally runs the init script to finish setting up the system.
 	"""
 	global root
-	print(colored("running debootstrap..", "green", attrs=["bold"]))
-	print(colored("this may take a while..", "green", attrs=["bold"]))
+	log("Running debootstrap...")
 	os.system(f"debootstrap stable {root} http://deb.debian.org/debian/")
 	script_dir = os.path.dirname(os.path.realpath(__file__))
-	print(colored("copying files..", "green", attrs=["bold"]))
+	log(f"Copying files to {root}..")
 	os.system(f"cp {script_dir}/init_script.sh {root}/usr/bin/init_script.sh")
 	os.system(f"cp {script_dir}/full.py {root}/usr/bin/pkg")
 	os.system(f"chmod +x {root}/usr/bin/init_script.sh")
-	print(colored("running init script..", "green", attrs=["bold"]))
+	log("Running init script")
 	os.system(f"arch-chroot {root} /usr/bin/init_script.sh")
-	print(colored("done", "green", attrs=["bold"]))
+	log("done")
 
 
 # path should point to a .deb file
@@ -380,7 +380,7 @@ def install_deps(dep_string: str):
 				install_deb(f"{tmpdir}/{dep}", fetch_dependencies=False)
 			except Exception as e:
 				log(f"Failed to install {dep}! Skipping for now...", WARNING)
-				print(e)
+				log(e, WARNING)
 				continue
 
 def install_pkg_from_online(pkg: str):
@@ -410,7 +410,6 @@ def install_deps_for_pkg(pkg: Package):
 	"""
 	assert type(pkg) == Package
 	deps = []
-	print(pkg)
 	info = pkg.get_info()
 	if not "Dependencies" in info["Package"]:
 		return
@@ -428,7 +427,7 @@ def get_pkg_list():
 	for pkg in packages:
 		pkg_name = pkg.split("***")
 		if len(pkg_name) != 2:
-			print(f"Corrupt package in system! \"{pkg}\" Skipping for now.")
+			log(f"Corrupt package in system! \"{pkg}\" Skipping for now.", WARNING)
 			continue
 		pkg_ret = Package(
 			pkg_name[0],
@@ -631,13 +630,13 @@ def get_files_and_directories_from_pkgs(deps: list):
 	dirs_occ = occurence_count(directories_bwrap_locations)
 	files_occ = occurence_count(files_bwrap_locations)
 
-	for dir,occ in zip(directories, dirs_occ):
-		dir.occurences = dirs_occ[dir.bwrap_loc]
-		if dir.occurences == None:
-			log(f"No occurences for {dir.bwrap_loc}", WARNING)
+	for i in range(len(directories)):
+		directories[i].occurences = dirs_occ[directories[i].bwrap_loc]
+		if directories[i].occurences == None:
+			log(f"No occurences for {directories[i].bwrap_loc}", WARNING)
 
-	for file,occ in zip(files, files_occ):
-		file.occurences = files_occ[file.bwrap_loc]
+	for i in range(len(files)):
+		files[i].occurences = files_occ[files[i].bwrap_loc]
 
 	assert type(directories) == list
 	assert type(files) == list
@@ -653,7 +652,7 @@ def occurence_count(l: list) -> dict:
 		{1: 2, 2: 1, 3: 1, 4: 2, 5: 1}
 	"""
 	assert type(l) == list
-	r = {x: l.count(x) for x in l}
+	r = dict(Counter(l))
 	assert type(r) == dict
 	return r
 
