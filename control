@@ -3,8 +3,9 @@ Version: 0.1.0
 Architecture: all
 Maintainer: dalixOS Team
 Homepage: figsystems.github.io/dalixOS
-Depends: bubblewrap (>= 0.11.0), sudo, python3, python3-tomli-w, python3-termcolor, python3-packaging, micro, python3-pip
+Depends: sudo, python3, python3-tomli-w, python3-termcolor, python3-packaging, micro, python3-pip
 Description: The package manager for dalixOS
  Instead of installing apps under FHS directories
  dalixOS installs them under /System/Packages and
- runs them in a bubblewrapped container.
+ runs them in a bubblewrapped container. We also
+ imbed bubblewrap into this because we need >= 0.11.0

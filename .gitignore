@@ -6,3 +6,4 @@ External/*
 build
 build/*
 Resources/dalixos-base.deb
+.vscode/
