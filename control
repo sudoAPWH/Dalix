@@ -1,9 +1,9 @@
 Package: dalixos-base
-Version: 0.1.0
+Version: 0.1.2
 Architecture: all
 Maintainer: dalixOS Team
 Homepage: figsystems.github.io/dalixOS
-Depends: sudo, python3, python3-tomli-w, python3-termcolor, python3-packaging, micro, python3-pip
+Depends: sudo, python3, python3-tomli-w, python3-termcolor, python3-packaging, micro, python3-pip, libc6 (>= 2.38), libcap2 (>= 1:2.10), libselinux1 (>= 3.1~)
 Description: The package manager for dalixOS
  Instead of installing apps under FHS directories
  dalixOS installs them under /System/Packages and

@@ -704,7 +704,7 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	# generate list of packages that need to be included
 
 	# Parse list of dependencies
-	deps_parsed = DebianUtils.parse_deps(deps)
+	deps_parsed = Dependency.parse_deps(deps)
 
 	# Get list of packages from list of dependencies
 	deps = System.deps_to_pkgs(deps_parsed)
@@ -833,9 +833,11 @@ elif args.command == "test":
 elif args.command == "run":
 	assert len(args.args) == 2, "Not enough arguments! We need to know what package AND the command!"
 
-	args = generate_bwrap_args([
-		args.args[0],
+	args = generate_bwrap_args(
+		[
+			args.args[0],
+		],
 		args.args[1]
-	])
+	)
 	args = ''.join([x + " " for x in args])
 	os.system(f"bwrap {args}")
