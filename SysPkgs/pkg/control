@@ -1,0 +1,9 @@
+Package: pkg
+Version: 0.1.0
+Architecture: all
+Maintainer: dalixOS Team
+Depends: bubblewrap (>= 0.11.0)
+Description: The package manager for dalixOS
+ Instead of installing apps under FHS directories
+ dalixOS installs them under /System/Packages and
+ runs them in a bubblewrapped container.
