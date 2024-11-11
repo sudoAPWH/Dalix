@@ -11,4 +11,7 @@
 		- [x] Symlink required packages
 	- [x] Fetch dependencies from debian's servers
 	- [x] Clean up code a bit
+	- [ ] Clean up build process
+		- [ ] Make pkg be a .deb package
+		- [ ] Make init_script.sh install pkg as a .deb package
 	- [ ] Post install scripts

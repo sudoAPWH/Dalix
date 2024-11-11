@@ -824,37 +824,29 @@ parser.add_argument(
 	default=''
 )
 parser.add_argument(
-	'-i',
-	'--install',
-	help='Install a .deb package',
+	"command"
 )
 parser.add_argument(
-	'-t',
-	'--test',
-	help='Run a random test script',
-	action='store_true'
-)
-parser.add_argument(
-	'-b',
-	'--bootstrap',
-	help='Init a system',
-	action='store_true'
+	"arg1"
 )
 
 args = parser.parse_args()
 
 root = args.root
 
-if args.install:
-	if args.install.startswith("./"):
-		install_deb(args.install)
+if args.command == "install":
+	if os.getuid() != 0:
+		log(f"Attempting to escalate privaleges to install {args.arg1}...", WARNING)
+		sys.exit(os.system(f"sudo {sys.argv[0]} install {args.arg1}"))
+	if args.arg1.startswith("./"):
+		install_deb(args.arg1)
 	else:
-		install_pkg_from_online(args.install)
-elif args.test:
+		install_pkg_from_online(args.arg1)
+elif args.command == "test":
 	args = generate_bwrap_args([
 		"neovim",
 	])
 	for arg in args:
 		print(arg)
-elif args.bootstrap:
+elif args.command == "bootstrap":
 	init_system()
