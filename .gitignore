@@ -3,3 +3,5 @@ Test/*
 External
 External/*
 **/__pycache__
+build
+build/*

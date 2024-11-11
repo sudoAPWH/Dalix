@@ -4,7 +4,7 @@
 mkdir -p build/usr/bin
 mkdir -p build/DEBIAN
 
-cp full.py build/usr/bin/pkg
+cp SysPkgs/pkg/full.py build/usr/bin/pkg
 cp control build/DEBIAN/control
 
 dpkg-deb --build build
