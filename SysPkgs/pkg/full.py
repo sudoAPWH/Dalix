@@ -681,7 +681,7 @@ def fill_dep_tree_from_list(pkgs: list) -> list:
 
 
 
-def generate_bwrap_args(deps: list) -> list:
+def generate_bwrap_args(deps: list, cmd: str) -> list:
 	"""
 	Generates a list of bubblewrap arguments for setting up the container environment.
 
@@ -695,6 +695,8 @@ def generate_bwrap_args(deps: list) -> list:
 	:param deps: A list of dependency strings
 	:return: A list of bubblewrap arguments for container setup.
 	"""
+	assert type(deps) == list
+	assert type(cmd) == str
 	global root
 	args = []
 	args.append(f"--overlay-src {root}")
@@ -757,6 +759,7 @@ def generate_bwrap_args(deps: list) -> list:
 				src_path = file.fullpath[len(root):]
 				args.append(f"--symlink {file.bwrap_loc} {src_path}")
 
+	args.append(cmd)
 	return args
 
 
@@ -808,7 +811,8 @@ parser.add_argument(
 	"command"
 )
 parser.add_argument(
-	"arg1"
+	"args",
+	nargs="+"
 )
 
 args = parser.parse_args()
@@ -817,15 +821,25 @@ root = args.root
 
 if args.command == "install":
 	if os.getuid() != 0:
-		log(f"Attempting to escalate privaleges to install {args.arg1}...", WARNING)
-		sys.exit(os.system(f"sudo {sys.argv[0]} install {args.arg1}"))
-	if args.arg1.startswith("./"):
-		install_deb(args.arg1)
+		log(f"Attempting to escalate privaleges to install {args.args[0]}...", WARNING)
+		sys.exit(os.system(f"sudo {sys.argv[0]} install {args.args[0]}"))
+	if args.args[0].startswith("./"):
+		install_deb(args.args[0])
 	else:
-		install_pkg_from_online(args.arg1)
+		install_pkg_from_online(args.args[0])
 elif args.command == "test":
 	args = generate_bwrap_args([
 		"neovim",
 	])
 	for arg in args:
 		print(arg)
+
+elif args.command == "run":
+	assert len(args.args) == 2, "Not enough arguments! We need to know what package AND the command!"
+
+	args = generate_bwrap_args([
+		args.args[0],
+		args.args[1]
+	])
+	args = ''.join([x + " " for x in args])
+	os.system(f"bwrap {args}")
