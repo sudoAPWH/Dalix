@@ -171,6 +171,38 @@ class Dependency:
 		else:
 			return Dependency(dep, None, None)
 
+	def parse_deps(deps: list) -> list:
+		"""
+		Parses a list of dependencies and returns a
+		list of `Dependency` representing the parsed dependencies.
+
+		The dep_info_t structure has the following fields:
+			- name: The name of the package.
+			- comparison: The comparison operator used in the dependency string.
+			- version: The version of the package.
+
+		For example, if given the input ["pkg1 (>= 2.1.0)", "pkg2 (= 3.2.1)", "pkg3 (<= 4.3.2)", "pkg4"],
+		the output will be:
+		[
+			Dependency("pkg1", [">="], ["2.1.0"]),
+			Dependency("pkg2", ["="], ["3.2.1"]),
+			Dependency("pkg3", ["<="], ["4.3.2"]),
+			Dependency("pkg4", None, None)
+		]
+
+		:param deps: A list of strings representing dependencies.
+		:return list(Dependency):
+		"""
+		assert type(deps) == list
+		for dep in deps:
+			assert type(dep) == str
+		deps_info = []
+		for dep in deps:
+			deps_info.append(Dependency.parse(dep))
+
+		assert type(deps_info) == list
+		return deps_info
+
 class OR:
 	def __init__(self, deps: list):
 		self.deps = deps
@@ -184,43 +216,374 @@ class OR:
 	def __repr__(self):
 		return f"OR({self.deps})"
 
+class System:
+	def symlink(src: str, dst: str):
+		"""
+		Creates a symbolic link from src to dst. dst is what gets created.
 
-def get_deb_info(path: str) -> dict:
-	"""
-	Extracts metadata from a .deb package.
+		Ensures that the directory of dest exists before creating the symlink.
+		"""
 
-	This function extracts all the metadata from a .deb package, and returns it as a dictionary.
+		assert type(src) == str and type(dst) == str
+		os.makedirs(src, exist_ok=True)
 
-	:raises ValueError: The package's control file is invalid.
-	:raises FileNotFoundError: The package does not exist.
-	:returns dict:
-	"""
-	assert os.path.exists(path), "Supplied path does not exist!"
-	with TemporaryDirectory() as tmpdir:
-		os.system(f"dpkg-deb -R {path} {tmpdir}")
-		assert os.path.exists(tmpdir + "/DEBIAN/control"), "No control file found in package!"
-		info_list = [] # contains tuples of (key: str, value: str)
-		with open(tmpdir + "/DEBIAN/control") as control:
-			file = control.read().rstrip()
-			entry_list = file.split("\n")
-			for entry in entry_list:
-				if entry[0] == " " or entry[0] == "\t":
-					if info_list:
-						info_list[-1] = (info_list[-1][0], info_list[-1][1] + "\n"  + entry)
+		dst_dir = os.path.dirname(dst)
+		os.makedirs(dst_dir, exist_ok=True)
+
+		# relative_path = os.path.relpath(source_path, target_dir)
+		os.symlink(src, dst, target_is_directory=os.path.isdir(src))
+	def get_pkg_list():
+		"""
+		Yields a list of all packages in the system
+		:return list(Package):
+		"""
+		packages = os.listdir(f"{root}/System/Packages")
+		for pkg in packages:
+			pkg_name = pkg.split("***")
+			if len(pkg_name) != 2:
+				log(f"Corrupt package in system! \"{pkg}\" Skipping for now.", WARNING)
+				continue
+			pkg_ret = Package(
+				pkg_name[0],
+				Version(pkg_name[1]),
+				f"{root}/System/Packages/{pkg}"
+			)
+			assert type(pkg_ret) == Package
+			yield pkg_ret
+
+	def search_pkg_list(name: str, strict=False):
+		"""
+		Searches for packages in the system package list by name.
+
+		This function iterates over the list of packages installed in the system
+		and yields packages that match the given name. If `strict` is True,
+		it yields packages with an exact name match. If `strict` is False,
+		it yields packages that contain the given name as a substring.
+
+		:param name: The name or substring to search for in package names.
+		:param strict: A boolean indicating whether to perform a strict name match.
+		:return yield Packages:
+		"""
+		assert type(name) == str
+		global root
+
+		for pkg in get_pkg_list():
+			if strict:
+				if pkg.name == name:
+					assert type(pkg) == Package
+					yield pkg
+			else:
+				if name in pkg.name:
+					assert type(pkg) == Package
+					yield pkg
+
+	def get_pkg(name: str):
+		"""
+		Returns the newest package matching the given name.
+
+		This function iterates over the list of packages installed in the system
+		and returns the newest package that matches the given name. If no packages
+		match the given name, it returns None.
+
+		:param name: The name of the package to search for.
+		:return Package: The newest package matching the given name, or None if no packages match.
+		"""
+		assert type(name) == str
+		candidates = list(search_pkg_list(name))
+		if not candidates: return None
+		newest = None
+		for candidate in candidates:
+			if newest == None:
+				newest = candidate
+			else:
+				if newest.version < candidate.version:
+					newest = candidate
+		assert type(newest) == Package
+		return newest
+
+	def list_directory_tree(path: str) -> list:
+		"""
+		Returns a recursive list of all files and directories in the given path.
+
+		:param path: The path to list the directory tree of.
+		:return: A list of all files and directories (recursively) in the given path.
+		"""
+		assert type(path) == str
+		files = []
+		for root, dirs, filenames in os.walk(path):
+			files.append(root)
+			files.extend(os.path.join(root, f) for f in filenames)
+		files.remove(path)
+		assert type(files) == list
+		return files
+
+	def deps_to_pkgs(deps_info: list) -> list:
+		"""
+		Takes a list of Dependency objects and returns a list of Package objects representing
+		the newest version of each dependency that satisfies the dependency's comparison operators.
+
+		:param deps_info: A list of Dependency objects.
+		:return list(Package):
+		"""
+		assert type(deps_info) == list
+		for d in deps_info:
+			assert type(d) == Dependency or type(d) == OR
+		pkg_deps = []
+
+		for dep in deps_info:
+			if type(dep) == Dependency:
+				pkgs = list(search_pkg_list(dep.name, strict=True))
+			elif type(dep) == OR:
+				pkgs = []
+				for d in dep.deps:
+					pkgs.extend(list(search_pkg_list(d.name, strict=True)))
+			if not pkgs:
+				raise ValueError(f"Could not find dependency \"{dep}\"")
+
+			best = None
+			for pkg in pkgs:
+				if best == None and dep.satisfied_by(pkg.version):
+					best = pkg
+				elif best == None:
+					continue
+				elif pkg.version > best.version and dep.satisfied_by(pkg.version):
+					best = pkg
+			if best == None:
+				raise ValueError(f"Could not find dependency \"{dep.name}\"")
+			pkg_deps.append(best)
+
+		assert type(pkg_deps) == list
+		return pkg_deps
+
+	def get_files_and_directories_from_pkgs(deps: list):
+		"""
+		:param deps: A list of `Package` objects.
+		:return list(item_t): A list of `item_t` objects representing the
+		files and directories in the given packages.
+		"""
+		assert type(deps) == list
+		for dep in deps:
+			assert type(dep) == Package
+
+		class item_t:
+			def __init__(self, bwrap_loc, fullpath, pkg, occurences):
+				self.bwrap_loc = bwrap_loc
+				self.fullpath = fullpath
+				self.pkg = pkg
+				self.occurences = occurences
+			def __repr__(self):
+				return f"Item({self.bwrap_loc}, {self.fullpath}, {self.pkg.name}, {self.occurences})"
+
+		# generate trees of all of them, and merge them together
+		directories = []
+		files = []
+		for dep in deps:
+			# for each Package...
+			dep_root = os.path.join(dep.path, "chroot")
+			dep_contents = list_directory_tree(dep_root)
+			for dep_item in dep_contents:
+				if os.path.isdir(dep_item):
+					directories.append(item_t(
+						dep_item[len(dep_root):], # removes down the common prefix
+						dep_item,
+						dep,
+						None
+					))
+				elif os.path.isfile(dep_item):
+					files.append(item_t(
+						dep_item[len(dep_root):], # removes down the common prefix
+						dep_item,
+						dep,
+						None
+					))
+
+		# So now we have a list of all the files and directories that need to be included
+		# This list is massive but we must not panic...
+
+		# files, and directories are all of type item_t
+		# so we need to convert them to their bwrap location
+
+		directories_bwrap_locations = list([x.bwrap_loc for x in directories])
+		files_bwrap_locations = list([x.bwrap_loc for x in files])
+
+		dirs_occ = occurence_count(directories_bwrap_locations)
+		files_occ = occurence_count(files_bwrap_locations)
+
+		for i in range(len(directories)):
+			directories[i].occurences = dirs_occ[directories[i].bwrap_loc]
+			if directories[i].occurences == None:
+				log(f"No occurences for {directories[i].bwrap_loc}", WARNING)
+
+		for i in range(len(files)):
+			files[i].occurences = files_occ[files[i].bwrap_loc]
+
+		assert type(directories) == list
+		assert type(files) == list
+		return files, directories
+
+class DebianUtils:
+	def get_deb_info(path: str) -> dict:
+		"""
+		Extracts metadata from a .deb package.
+
+		This function extracts all the metadata from a .deb package, and returns it as a dictionary.
+
+		:raises ValueError: The package's control file is invalid.
+		:raises FileNotFoundError: The package does not exist.
+		:returns dict:
+		"""
+		assert os.path.exists(path), "Supplied path does not exist!"
+		with TemporaryDirectory() as tmpdir:
+			os.system(f"dpkg-deb -R {path} {tmpdir}")
+			assert os.path.exists(tmpdir + "/DEBIAN/control"), "No control file found in package!"
+			info_list = [] # contains tuples of (key: str, value: str)
+			with open(tmpdir + "/DEBIAN/control") as control:
+				file = control.read().rstrip()
+				entry_list = file.split("\n")
+				for entry in entry_list:
+					if entry[0] == " " or entry[0] == "\t":
+						if info_list:
+							info_list[-1] = (info_list[-1][0], info_list[-1][1] + "\n"  + entry)
+						else:
+							raise ValueError("Invalid control file in package!")
 					else:
-						raise ValueError("Invalid control file in package!")
-				else:
-					entry_split = entry.split(":")
-					entry_split[1] = ''.join(entry_split[1:])
+						entry_split = entry.split(":")
+						entry_split[1] = ''.join(entry_split[1:])
 
-					key,value = entry_split[0:2]
-					key = key.lstrip().rstrip()
-					value = value.lstrip().rstrip()
-					info_list.append((key, value))
-	info = {}
-	for entry_list in info_list:
-		info[entry_list[0]] = entry_list[1]
-	return info
+						key,value = entry_split[0:2]
+						key = key.lstrip().rstrip()
+						value = value.lstrip().rstrip()
+						info_list.append((key, value))
+		info = {}
+		for entry_list in info_list:
+			info[entry_list[0]] = entry_list[1]
+		return info
+
+	def install_deb(path: str, fetch_dependencies: bool = True):
+		"""
+		Installs a .deb package into the system.
+
+		This function will install a .deb package into the system. The package will be extracted and
+		installed into a directory under /System/Packages, and the metadata will be extracted and stored
+		in a file called pkg-info in the same directory.
+
+		All symlinks will be created to point to the correct location.
+
+		:raises ValueError: The package's control file is invalid.
+		:raises FileNotFoundError: The package does not exist.
+		:raises AssertionError: The package's path does not end with .deb.
+		"""
+		assert type(path) == str and type(fetch_dependencies) == bool
+		global root
+
+		assert os.path.exists(path), "Supplied path does not exist!"
+		assert path.lower()[-4:] == ".deb", "Path does not point to a .deb file!"
+		# create pkg directory
+		with TemporaryDirectory() as tmpdir:
+			# extract pkg
+			log(f"Extracting {path}...")
+			os.system(f"dpkg -x {path} {tmpdir}")
+			# extract metadata
+			info = get_deb_info(path)
+			info = deb_to_pkg_info(info)
+			# install package
+
+			log(f"Installing {path}...")
+
+			inst_dir = f"{root}/System/Packages/{info['Package']['Name']}***{info['Package']['Version']}"
+
+			if os.path.exists(inst_dir):
+				os.system(f"rm -R {inst_dir}")
+			os.system(f"mkdir -p {inst_dir}")
+
+			# create symlinks
+			chroot = inst_dir + "/chroot"
+			symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
+			symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
+			symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
+			symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
+			symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
+			symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
+			symlink(f"{chroot}/usr/var", f"{chroot}/var")
+
+			# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/chroot")
+			copytree(
+				tmpdir,
+				f"{inst_dir}/chroot",
+				symlinks=True,
+				dirs_exist_ok=True
+			)
+
+			# install config
+			os.system(f"touch {inst_dir}/pkg-info")
+			with open(f"{inst_dir}/pkg-info", "w") as info_f:
+				info_f.write(
+					tomli_w.dumps(
+						info,
+						multiline_strings=True
+					),
+				)
+			# install dependencies from debians servers.
+			if "Dependencies" in info["Package"] and fetch_dependencies:
+				install_deps_for_pkg_from_online(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
+
+	def install_deps_from_online(dep_string: str):
+		"""
+		Downloads and installs all dependencies specified in dep_string.
+
+		:raises FileNotFoundError: Apt-get failed to download the specified package.
+		:raises Exception: Any other exception will be raised if the install fails.
+		:param dep_string: A string of dependencies to install
+		"""
+		assert type(dep_string) == str
+		cmd = "apt-get satisfy --download-only"
+		with TemporaryDirectory() as tmpdir:
+			os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
+			deps = os.listdir(tmpdir)
+			for dep in deps:
+				if dep[-4:] != ".deb":
+					continue
+				log(f"Going to install {dep}...")
+				try:
+					install_deb(f"{tmpdir}/{dep}", fetch_dependencies=False)
+				except Exception as e:
+					log(f"Failed to install {dep}! Skipping for now...", WARNING)
+					log(e, WARNING)
+					continue
+
+	def install_pkg_from_online(pkg: str):
+		"""
+		:param str: A string repersenting the package to install
+		"""
+		assert type(pkg) == str
+		cmd = "apt-get install --download-only --reinstall"
+		with TemporaryDirectory() as tmpdir:
+			os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={tmpdir} -y")
+			pkgs = os.listdir(tmpdir)
+			for pkg in pkgs:
+				if pkg[-4:] != ".deb":
+					continue
+				log(f"Going to install {pkg}...")
+				try:
+					install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
+				except Exception as e:
+					log(f"Failed to install {pkg}! Skipping for now...", WARNING)
+					log(e, WARNING)
+					continue
+	def install_deps_for_pkg_from_online(pkg: Package):
+		"""
+		Fetches the dependencies of a package from debian's servers.
+		We make apt do the heavy lifting
+		:param Package: A package to install dependencies for.
+		"""
+		assert type(pkg) == Package
+		deps = []
+		info = pkg.get_info()
+		if not "Dependencies" in info["Package"]:
+			return
+		cmd = "apt satisfy --download-only"
+		dep_string = info["Package"]["Dependencies"]
+		install_deps_from_online(dep_string)
 
 def deb_to_pkg_info(info: dict) -> dict:
 	"""
@@ -254,374 +617,8 @@ def deb_to_pkg_info(info: dict) -> dict:
 	assert type(pkg_info) == dict
 	return pkg_info
 
-def symlink(src: str, dst: str):
-	"""
-	Creates a symbolic link from src to dst. dst is what gets created.
-
-	Ensures that the directory of dest exists before creating the symlink.
-	"""
-
-	assert type(src) == str and type(dst) == str
-	os.makedirs(src, exist_ok=True)
-
-	dst_dir = os.path.dirname(dst)
-	os.makedirs(dst_dir, exist_ok=True)
-
-	# relative_path = os.path.relpath(source_path, target_dir)
-	os.symlink(src, dst, target_is_directory=os.path.isdir(src))
 
 
-# path should point to a .deb file
-def install_deb(path: str, fetch_dependencies: bool = True):
-	"""
-	Installs a .deb package into the system.
-
-	This function will install a .deb package into the system. The package will be extracted and
-	installed into a directory under /System/Packages, and the metadata will be extracted and stored
-	in a file called pkg-info in the same directory.
-
-	All symlinks will be created to point to the correct location.
-
-	:raises ValueError: The package's control file is invalid.
-	:raises FileNotFoundError: The package does not exist.
-	:raises AssertionError: The package's path does not end with .deb.
-	"""
-	assert type(path) == str and type(fetch_dependencies) == bool
-	global root
-
-	assert os.path.exists(path), "Supplied path does not exist!"
-	assert path.lower()[-4:] == ".deb", "Path does not point to a .deb file!"
-	# create pkg directory
-	with TemporaryDirectory() as tmpdir:
-		# extract pkg
-		log(f"Extracting {path}...")
-		os.system(f"dpkg -x {path} {tmpdir}")
-		# extract metadata
-		info = get_deb_info(path)
-		info = deb_to_pkg_info(info)
-		# install package
-
-		log(f"Installing {path}...")
-
-		inst_dir = f"{root}/System/Packages/{info['Package']['Name']}***{info['Package']['Version']}"
-
-		if os.path.exists(inst_dir):
-			os.system(f"rm -R {inst_dir}")
-		os.system(f"mkdir -p {inst_dir}")
-
-		# create symlinks
-		chroot = inst_dir + "/chroot"
-		symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
-		symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
-		symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
-		symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
-		symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
-		symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
-		symlink(f"{chroot}/usr/var", f"{chroot}/var")
-
-		# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/chroot")
-		copytree(
-			tmpdir,
-			f"{inst_dir}/chroot",
-			symlinks=True,
-			dirs_exist_ok=True
-		)
-
-		# install config
-		os.system(f"touch {inst_dir}/pkg-info")
-		with open(f"{inst_dir}/pkg-info", "w") as info_f:
-			info_f.write(
-				tomli_w.dumps(
-					info,
-					multiline_strings=True
-				),
-			)
-		# install dependencies from debians servers.
-		if "Dependencies" in info["Package"] and fetch_dependencies:
-			install_deps_for_pkg(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
-
-def install_deps(dep_string: str):
-	"""
-	Downloads and installs all dependencies specified in dep_string.
-
-	:raises FileNotFoundError: Apt-get failed to download the specified package.
-	:raises Exception: Any other exception will be raised if the install fails.
-	:param dep_string: A string of dependencies to install
-	"""
-	assert type(dep_string) == str
-	cmd = "apt-get satisfy --download-only"
-	with TemporaryDirectory() as tmpdir:
-		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
-		deps = os.listdir(tmpdir)
-		for dep in deps:
-			if dep[-4:] != ".deb":
-				continue
-			log(f"Going to install {dep}...")
-			try:
-				install_deb(f"{tmpdir}/{dep}", fetch_dependencies=False)
-			except Exception as e:
-				log(f"Failed to install {dep}! Skipping for now...", WARNING)
-				log(e, WARNING)
-				continue
-
-def install_pkg_from_online(pkg: str):
-	"""
-	:param str: A string repersenting the package to install
-	"""
-	assert type(pkg) == str
-	cmd = "apt-get install --download-only --reinstall"
-	with TemporaryDirectory() as tmpdir:
-		os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={tmpdir} -y")
-		pkgs = os.listdir(tmpdir)
-		for pkg in pkgs:
-			if pkg[-4:] != ".deb":
-				continue
-			log(f"Going to install {pkg}...")
-			try:
-				install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
-			except Exception as e:
-				log(f"Failed to install {pkg}! Skipping for now...", WARNING)
-				log(e, WARNING)
-				continue
-def install_deps_for_pkg(pkg: Package):
-	"""
-	Fetches the dependencies of a package from debian's servers.
-	We make apt do the heavy lifting
-	:param Package: A package to install dependencies for.
-	"""
-	assert type(pkg) == Package
-	deps = []
-	info = pkg.get_info()
-	if not "Dependencies" in info["Package"]:
-		return
-	cmd = "apt satisfy --download-only"
-	dep_string = info["Package"]["Dependencies"]
-	install_deps(dep_string)
-
-
-def get_pkg_list():
-	"""
-	Yields a list of all packages in the system
-	:return list(Package):
-	"""
-	packages = os.listdir(f"{root}/System/Packages")
-	for pkg in packages:
-		pkg_name = pkg.split("***")
-		if len(pkg_name) != 2:
-			log(f"Corrupt package in system! \"{pkg}\" Skipping for now.", WARNING)
-			continue
-		pkg_ret = Package(
-			pkg_name[0],
-			Version(pkg_name[1]),
-			f"{root}/System/Packages/{pkg}"
-		)
-		assert type(pkg_ret) == Package
-		yield pkg_ret
-
-def search_pkg_list(name: str, strict=False):
-	"""
-	Searches for packages in the system package list by name.
-
-	This function iterates over the list of packages installed in the system
-	and yields packages that match the given name. If `strict` is True,
-	it yields packages with an exact name match. If `strict` is False,
-	it yields packages that contain the given name as a substring.
-
-	:param name: The name or substring to search for in package names.
-	:param strict: A boolean indicating whether to perform a strict name match.
-	:return yield Packages:
-	"""
-	assert type(name) == str
-	global root
-
-	for pkg in get_pkg_list():
-		if strict:
-			if pkg.name == name:
-				assert type(pkg) == Package
-				yield pkg
-		else:
-			if name in pkg.name:
-				assert type(pkg) == Package
-				yield pkg
-
-def get_pkg(name: str):
-	"""
-	Returns the newest package matching the given name.
-
-	This function iterates over the list of packages installed in the system
-	and returns the newest package that matches the given name. If no packages
-	match the given name, it returns None.
-
-	:param name: The name of the package to search for.
-	:return Package: The newest package matching the given name, or None if no packages match.
-	"""
-	assert type(name) == str
-	candidates = list(search_pkg_list(name))
-	if not candidates: return None
-	newest = None
-	for candidate in candidates:
-		if newest == None:
-			newest = candidate
-		else:
-			if newest.version < candidate.version:
-				newest = candidate
-	assert type(newest) == Package
-	return newest
-
-def list_directory_tree(path: str) -> list:
-	"""
-	Returns a recursive list of all files and directories in the given path.
-
-	:param path: The path to list the directory tree of.
-	:return: A list of all files and directories (recursively) in the given path.
-	"""
-	assert type(path) == str
-	files = []
-	for root, dirs, filenames in os.walk(path):
-		files.append(root)
-		files.extend(os.path.join(root, f) for f in filenames)
-	files.remove(path)
-	assert type(files) == list
-	return files
-
-
-
-
-def parse_deps(deps: list) -> list:
-	"""
-	Parses a list of dependencies and returns a
-	list of `Dependency` representing the parsed dependencies.
-
-	The dep_info_t structure has the following fields:
-		- name: The name of the package.
-		- comparison: The comparison operator used in the dependency string.
-		- version: The version of the package.
-
-	For example, if given the input ["pkg1 (>= 2.1.0)", "pkg2 (= 3.2.1)", "pkg3 (<= 4.3.2)", "pkg4"],
-	the output will be:
-	[
-		Dependency("pkg1", [">="], ["2.1.0"]),
-		Dependency("pkg2", ["="], ["3.2.1"]),
-		Dependency("pkg3", ["<="], ["4.3.2"]),
-		Dependency("pkg4", None, None)
-	]
-
-	:param deps: A list of strings representing dependencies.
-	:return list(Dependency):
-	"""
-	assert type(deps) == list
-	for dep in deps:
-		assert type(dep) == str
-	deps_info = []
-	for dep in deps:
-		deps_info.append(Dependency.parse(dep))
-
-	assert type(deps_info) == list
-	return deps_info
-
-def deps_to_pkgs(deps_info: list) -> list:
-	"""
-	Takes a list of Dependency objects and returns a list of Package objects representing
-	the newest version of each dependency that satisfies the dependency's comparison operators.
-
-	:param deps_info: A list of Dependency objects.
-	:return list(Package):
-	"""
-	assert type(deps_info) == list
-	for d in deps_info:
-		assert type(d) == Dependency or type(d) == OR
-	pkg_deps = []
-
-	for dep in deps_info:
-		if type(dep) == Dependency:
-			pkgs = list(search_pkg_list(dep.name, strict=True))
-		elif type(dep) == OR:
-			pkgs = []
-			for d in dep.deps:
-				pkgs.extend(list(search_pkg_list(d.name, strict=True)))
-		if not pkgs:
-			raise ValueError(f"Could not find dependency \"{dep}\"")
-
-		best = None
-		for pkg in pkgs:
-			if best == None and dep.satisfied_by(pkg.version):
-				best = pkg
-			elif best == None:
-				continue
-			elif pkg.version > best.version and dep.satisfied_by(pkg.version):
-				best = pkg
-		if best == None:
-			raise ValueError(f"Could not find dependency \"{dep.name}\"")
-		pkg_deps.append(best)
-
-	assert type(pkg_deps) == list
-	return pkg_deps
-
-def get_files_and_directories_from_pkgs(deps: list):
-	"""
-	:param deps: A list of `Package` objects.
-	:return list(item_t): A list of `item_t` objects representing the
-	files and directories in the given packages.
-	"""
-	assert type(deps) == list
-	for dep in deps:
-		assert type(dep) == Package
-
-	class item_t:
-		def __init__(self, bwrap_loc, fullpath, pkg, occurences):
-			self.bwrap_loc = bwrap_loc
-			self.fullpath = fullpath
-			self.pkg = pkg
-			self.occurences = occurences
-		def __repr__(self):
-			return f"Item({self.bwrap_loc}, {self.fullpath}, {self.pkg.name}, {self.occurences})"
-
-	# generate trees of all of them, and merge them together
-	directories = []
-	files = []
-	for dep in deps:
-		# for each Package...
-		dep_root = os.path.join(dep.path, "chroot")
-		dep_contents = list_directory_tree(dep_root)
-		for dep_item in dep_contents:
-			if os.path.isdir(dep_item):
-				directories.append(item_t(
-					dep_item[len(dep_root):], # removes down the common prefix
-					dep_item,
-					dep,
-					None
-				))
-			elif os.path.isfile(dep_item):
-				files.append(item_t(
-					dep_item[len(dep_root):], # removes down the common prefix
-					dep_item,
-					dep,
-					None
-				))
-
-	# So now we have a list of all the files and directories that need to be included
-	# This list is massive but we must not panic...
-
-	# files, and directories are all of type item_t
-	# so we need to convert them to their bwrap location
-
-	directories_bwrap_locations = list([x.bwrap_loc for x in directories])
-	files_bwrap_locations = list([x.bwrap_loc for x in files])
-
-	dirs_occ = occurence_count(directories_bwrap_locations)
-	files_occ = occurence_count(files_bwrap_locations)
-
-	for i in range(len(directories)):
-		directories[i].occurences = dirs_occ[directories[i].bwrap_loc]
-		if directories[i].occurences == None:
-			log(f"No occurences for {directories[i].bwrap_loc}", WARNING)
-
-	for i in range(len(files)):
-		files[i].occurences = files_occ[files[i].bwrap_loc]
-
-	assert type(directories) == list
-	assert type(files) == list
-	return files, directories
 
 def occurence_count(l: list) -> dict:
 	"""
