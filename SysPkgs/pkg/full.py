@@ -270,25 +270,6 @@ def symlink(src: str, dst: str):
 	# relative_path = os.path.relpath(source_path, target_dir)
 	os.symlink(src, dst, target_is_directory=os.path.isdir(src))
 
-def init_system():
-	"""
-	Initializes the system by first running debbootstrap to create a
-	basic system in the root directory,
-	then copies the necessary files into the root directory,
-	and finally runs the init script to finish setting up the system.
-	"""
-	global root
-	log("Running debootstrap...")
-	os.system(f"debootstrap stable {root} http://deb.debian.org/debian/")
-	script_dir = os.path.dirname(os.path.realpath(__file__))
-	log(f"Copying files to {root}..")
-	os.system(f"cp {script_dir}/init_script.sh {root}/usr/bin/init_script.sh")
-	os.system(f"cp {script_dir}/full.py {root}/usr/bin/pkg")
-	os.system(f"chmod +x {root}/usr/bin/init_script.sh")
-	log("Running init script")
-	os.system(f"arch-chroot {root} /usr/bin/init_script.sh")
-	log("done")
-
 
 # path should point to a .deb file
 def install_deb(path: str, fetch_dependencies: bool = True):
@@ -848,5 +829,3 @@ elif args.command == "test":
 	])
 	for arg in args:
 		print(arg)
-elif args.command == "bootstrap":
-	init_system()
