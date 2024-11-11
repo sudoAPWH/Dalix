@@ -99,7 +99,7 @@ class Package:
 				deps.append(OR([Dependency.parse(dep.lstrip().rstrip()) for dep in dep.split("|")]))
 			else:
 				deps.append(Dependency.parse(dep))
-		pkgs = deps_to_pkgs(deps)
+		pkgs = System.deps_to_pkgs(deps)
 
 		assert type(pkgs) == list
 		for pkg in pkgs:
@@ -267,7 +267,7 @@ class System:
 		assert type(name) == str
 		global root
 
-		for pkg in get_pkg_list():
+		for pkg in System.get_pkg_list():
 			if strict:
 				if pkg.name == name:
 					assert type(pkg) == Package
@@ -289,7 +289,7 @@ class System:
 		:return Package: The newest package matching the given name, or None if no packages match.
 		"""
 		assert type(name) == str
-		candidates = list(search_pkg_list(name))
+		candidates = list(System.search_pkg_list(name))
 		if not candidates: return None
 		newest = None
 		for candidate in candidates:
@@ -332,11 +332,11 @@ class System:
 
 		for dep in deps_info:
 			if type(dep) == Dependency:
-				pkgs = list(search_pkg_list(dep.name, strict=True))
+				pkgs = list(System.search_pkg_list(dep.name, strict=True))
 			elif type(dep) == OR:
 				pkgs = []
 				for d in dep.deps:
-					pkgs.extend(list(search_pkg_list(d.name, strict=True)))
+					pkgs.extend(list(System.search_pkg_list(d.name, strict=True)))
 			if not pkgs:
 				raise ValueError(f"Could not find dependency \"{dep}\"")
 
@@ -380,7 +380,7 @@ class System:
 		for dep in deps:
 			# for each Package...
 			dep_root = os.path.join(dep.path, "chroot")
-			dep_contents = list_directory_tree(dep_root)
+			dep_contents = System.list_directory_tree(dep_root)
 			for dep_item in dep_contents:
 				if os.path.isdir(dep_item):
 					directories.append(item_t(
@@ -420,6 +420,47 @@ class System:
 		assert type(directories) == list
 		assert type(files) == list
 		return files, directories
+
+	def fill_dep_tree(pkg, ignore_list=[]) -> list:
+		"""
+		Returns a list of all dependencies required for the container from a list of all the
+		dependenecies that are specified by the caller.
+
+		:param deps: A Package object
+		:return list(Package): A list of all dependencies required for the dependency
+		"""
+		assert type(pkg) == Package
+		assert type(ignore_list) == list
+
+		output = []
+
+		if pkg in ignore_list:
+			return []
+		# Package
+		output.append(pkg)
+
+		for child in pkg.get_deps(): # Packages
+			if child not in ignore_list:
+				output.extend(System.fill_dep_tree(child, ignore_list=output))
+
+		assert type(output) == list
+		for out in output:
+			assert type(out) == Package
+		return output
+
+	def fill_dep_tree_from_list(pkgs: list) -> list:
+		"""
+		:param deps: A list of Packages
+		:return list(Package):
+		"""
+		assert type(pkgs) == list
+		output = []
+		for pkg in pkgs:
+			output.extend(System.fill_dep_tree(pkg, ignore_list=output))
+		assert type(output) == list
+		for out in output:
+			assert type(out) == Package
+		return output
 
 class DebianUtils:
 	def get_deb_info(path: str) -> dict:
@@ -484,8 +525,10 @@ class DebianUtils:
 			log(f"Extracting {path}...")
 			os.system(f"dpkg -x {path} {tmpdir}")
 			# extract metadata
-			info = get_deb_info(path)
-			info = deb_to_pkg_info(info)
+			info = DebianUtils.get_deb_info(path)
+			info = DebianUtils.deb_to_pkg_info(info)
+			info["other"] = {}
+			info["other"]["source"] = "deb"
 			# install package
 
 			log(f"Installing {path}...")
@@ -498,13 +541,13 @@ class DebianUtils:
 
 			# create symlinks
 			chroot = inst_dir + "/chroot"
-			symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
-			symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
-			symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
-			symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
-			symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
-			symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
-			symlink(f"{chroot}/usr/var", f"{chroot}/var")
+			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
+			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
+			# System.symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
+			System.symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
+			System.symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
+			System.symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
+			System.symlink(f"{chroot}/usr/var", f"{chroot}/var")
 
 			# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/chroot")
 			copytree(
@@ -525,7 +568,7 @@ class DebianUtils:
 				)
 			# install dependencies from debians servers.
 			if "Dependencies" in info["Package"] and fetch_dependencies:
-				install_deps_for_pkg_from_online(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
+				DebianUtils.install_deps_for_pkg_from_online(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
 
 	def install_deps_from_online(dep_string: str):
 		"""
@@ -545,7 +588,7 @@ class DebianUtils:
 					continue
 				log(f"Going to install {dep}...")
 				try:
-					install_deb(f"{tmpdir}/{dep}", fetch_dependencies=False)
+					DebianUtils.install_deb(f"{tmpdir}/{dep}", fetch_dependencies=False)
 				except Exception as e:
 					log(f"Failed to install {dep}! Skipping for now...", WARNING)
 					log(e, WARNING)
@@ -565,7 +608,7 @@ class DebianUtils:
 					continue
 				log(f"Going to install {pkg}...")
 				try:
-					install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
+					DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
 				except Exception as e:
 					log(f"Failed to install {pkg}! Skipping for now...", WARNING)
 					log(e, WARNING)
@@ -583,39 +626,39 @@ class DebianUtils:
 			return
 		cmd = "apt satisfy --download-only"
 		dep_string = info["Package"]["Dependencies"]
-		install_deps_from_online(dep_string)
+		DebianUtils.install_deps_from_online(dep_string)
 
-def deb_to_pkg_info(info: dict) -> dict:
-	"""
-	Convert a debian control file info dict into a dalixOS pkg-info dict.
+	def deb_to_pkg_info(info: dict) -> dict:
+		"""
+		Convert a debian control file info dict into a dalixOS pkg-info dict.
 
-	This function takes a dict generated by get_deb_info and converts it into a dict
-	that can be written to a pkg-info file.
+		This function takes a dict generated by get_deb_info and converts it into a dict
+		that can be written to a pkg-info file.
 
-	:raises ValueError: If the control file is invalid
-	:returns dict:
-	"""
-	assert type(info) == dict
-	pkg_info = {
-		"InfoType": 1,
-		"Package": {}
-	}
-	try:
-		pkg_info["Package"]["Name"] = info["Package"]
-		pkg_info["Package"]["Version"] = info["Version"]
-		pkg_info["Package"]["Arch"] = info["Architecture"]
-		pkg_info["Package"]["Maintainer"] = info["Maintainer"]
-		pkg_info["Package"]["Description"] = info["Description"]
-		if "Depends" in info:
-			deps = info["Depends"]
-			# deps = deps.replace(",", "\n").replace("(", "").replace(")", "").replace(" ", "")
-			pkg_info["Package"]["Dependencies"] = deps
-		else:
-			pkg_info["Package"]["Dependencies"] = ""
-	except KeyError:
-		raise ValueError("Invalid debian control file in package!")
-	assert type(pkg_info) == dict
-	return pkg_info
+		:raises ValueError: If the control file is invalid
+		:returns dict:
+		"""
+		assert type(info) == dict
+		pkg_info = {
+			"InfoType": 1,
+			"Package": {}
+		}
+		try:
+			pkg_info["Package"]["Name"] = info["Package"]
+			pkg_info["Package"]["Version"] = info["Version"]
+			pkg_info["Package"]["Arch"] = info["Architecture"]
+			pkg_info["Package"]["Maintainer"] = info["Maintainer"]
+			pkg_info["Package"]["Description"] = info["Description"]
+			if "Depends" in info:
+				deps = info["Depends"]
+				# deps = deps.replace(",", "\n").replace("(", "").replace(")", "").replace(" ", "")
+				pkg_info["Package"]["Dependencies"] = deps
+			else:
+				pkg_info["Package"]["Dependencies"] = ""
+		except KeyError:
+			raise ValueError("Invalid debian control file in package!")
+		assert type(pkg_info) == dict
+		return pkg_info
 
 
 
@@ -633,50 +676,6 @@ def occurence_count(l: list) -> dict:
 	r = dict(Counter(l))
 	assert type(r) == dict
 	return r
-
-
-def fill_dep_tree(pkg, ignore_list=[]) -> list:
-	"""
-	Returns a list of all dependencies required for the container from a list of all the
-	dependenecies that are specified by the caller.
-
-	:param deps: A Package object
-	:return list(Package): A list of all dependencies required for the dependency
-	"""
-	assert type(pkg) == Package
-	assert type(ignore_list) == list
-
-	output = []
-
-	if pkg in ignore_list:
-		return []
-	# Package
-	output.append(pkg)
-
-	for child in pkg.get_deps(): # Packages
-		if child not in ignore_list:
-			output.extend(fill_dep_tree(child, ignore_list=output))
-
-	assert type(output) == list
-	for out in output:
-		assert type(out) == Package
-	return output
-
-def fill_dep_tree_from_list(pkgs: list) -> list:
-	"""
-	:param deps: A list of Packages
-	:return list(Package):
-	"""
-	assert type(pkgs) == list
-	output = []
-	for pkg in pkgs:
-		output.extend(fill_dep_tree(pkg, ignore_list=output))
-	assert type(output) == list
-	for out in output:
-		assert type(out) == Package
-	return output
-
-
 
 def generate_bwrap_args(deps: list, cmd: str) -> list:
 	"""
@@ -705,16 +704,16 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	# generate list of packages that need to be included
 
 	# Parse list of dependencies
-	deps_parsed = parse_deps(deps)
+	deps_parsed = DebianUtils.parse_deps(deps)
 
 	# Get list of packages from list of dependencies
-	deps = deps_to_pkgs(deps_parsed)
-	deps = fill_dep_tree_from_list(deps)
+	deps = System.deps_to_pkgs(deps_parsed)
+	deps = System.fill_dep_tree_from_list(deps)
 
 	# item_t = namedtuple('item_t', ['bwrap_loc', 'fullpath', 'pkg', "occurences"])
 
 	# Get list of files and directories from list of dependencies
-	files, directories = get_files_and_directories_from_pkgs(deps)
+	files, directories = System.get_files_and_directories_from_pkgs(deps)
 
 	# We need to follow the rules defined in Pkgs.md
 
@@ -821,9 +820,9 @@ if args.command == "install":
 		log(f"Attempting to escalate privaleges to install {args.args[0]}...", WARNING)
 		sys.exit(os.system(f"sudo {sys.argv[0]} install {args.args[0]}"))
 	if args.args[0].startswith("./"):
-		install_deb(args.args[0])
+		DebianUtils.install_deb(args.args[0])
 	else:
-		install_pkg_from_online(args.args[0])
+		DebianUtils.install_pkg_from_online(args.args[0])
 elif args.command == "test":
 	args = generate_bwrap_args([
 		"neovim",
