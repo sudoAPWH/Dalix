@@ -5,3 +5,4 @@ External/*
 **/__pycache__
 build
 build/*
+Resources/dalixos-base.deb
