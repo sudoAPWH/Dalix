@@ -695,7 +695,7 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	assert type(cmd) == str
 	global root
 	args = []
-	args.append(f"--overlay-src {root}")
+	args.append(f"--overlay-src {os.path.join("/", root)}")
 	args.append(f"--tmp-overlay /")
 	args.append(f"--bind {root}/System /System")
 	args.append(f"--bind {root}/Users /Users")
@@ -737,7 +737,7 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 				args.append(f"--symlink {dir.bwrap_loc} {src_path}")
 				symlinked.append(dir.bwrap_loc)
 		elif dir.occurences > 1:
-			args.append(f"--mkdir {dir.bwrap_loc}")
+			args.append(f"--dir {dir.bwrap_loc}")
 
 	# for each file...
 	# if occurence count = 1, symlink
@@ -810,6 +810,12 @@ parser.add_argument(
 	"args",
 	nargs="+"
 )
+parser.add_argument(
+	"-p",
+	"--output-only",
+	help="Only output the command to be run",
+	action="store_true"
+)
 
 args = parser.parse_args()
 
@@ -833,11 +839,15 @@ elif args.command == "test":
 elif args.command == "run":
 	assert len(args.args) == 2, "Not enough arguments! We need to know what package AND the command!"
 
-	args = generate_bwrap_args(
+	bargs = generate_bwrap_args(
 		[
 			args.args[0],
 		],
-		args.args[1]
+		''.join([x+" " for x in args.args[1]])
 	)
-	args = ''.join([x + " " for x in args])
-	os.system(f"bwrap {args}")
+	bargs = ''.join([x + " " for x in bargs])
+	if args.output_only:
+		print(bargs)
+		sys.exit(0)
+	else:
+		sys.exit(os.system(f"bwrap {bargs}"))
