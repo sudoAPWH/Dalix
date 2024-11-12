@@ -22,6 +22,13 @@ EOF
 
 dev="$(sudo losetup -Pf --show disk.img)"
 
+mkdir mnt
+sudo mount $(dev)p2 mnt
+sudo mkdir mnt/boot
+sudo mount $(dev)p1 mnt/boot
 
+# Now we have the file hiearchy in mnt/
+
+sudo debootstrap unstable mnt http://deb.debian.org/debian/
 
 sudo losetup -d $(dev)
