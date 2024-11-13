@@ -587,7 +587,7 @@ class DebianUtils:
 			if "Dependencies" in info["Package"] and fetch_dependencies:
 				DebianUtils.install_deps_for_pkg_from_online(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
 
-	def satisfy(dep_string: str, outdir: str):
+	def apt_satisfy(dep_string: str, outdir: str):
 		cmd = "apt-get satisfy --download-only"
 		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={outdir} -y")
 
@@ -601,7 +601,7 @@ class DebianUtils:
 		"""
 		assert type(dep_string) == str
 		with TemporaryDirectory() as tmpdir:
-			DebianUtils.satisfy(dep_string, tmpdir)
+			DebianUtils.apt_satisfy(dep_string, tmpdir)
 			deps = os.listdir(tmpdir)
 			for dep in deps:
 				if dep[-4:] != ".deb":
@@ -614,14 +614,18 @@ class DebianUtils:
 					log(e, WARNING)
 					continue
 
+	def apt_install(pkg: str, out: str):
+		cmd = "apt-get install --download-only --reinstall"
+		os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={out} -y")
+
 	def install_pkg_from_online(pkg: str):
 		"""
 		:param str: A string repersenting the package to install
 		"""
 		assert type(pkg) == str
-		cmd = "apt-get install --download-only --reinstall"
+
 		with TemporaryDirectory() as tmpdir:
-			os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={tmpdir} -y")
+			DebianUtils.apt_install(pkg, tmpdir)
 			pkgs = os.listdir(tmpdir)
 			for pkg in pkgs:
 				if pkg[-4:] != ".deb":
@@ -644,7 +648,6 @@ class DebianUtils:
 		info = pkg.get_info()
 		if not "Dependencies" in info["Package"]:
 			return
-		cmd = "apt satisfy --download-only"
 		dep_string = info["Package"]["Dependencies"]
 		DebianUtils.install_deps_from_online(dep_string)
 
@@ -812,62 +815,59 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 
 
 
-if __name__ != "__main__":
-	print("This file is not meant to be imported!")
-	sys.exit(1)
-
-parser = argparse.ArgumentParser(description='dalixOS package manager')
-parser.add_argument(
-	'-r',
-	'--root',
-	help='Root directory of the system',
-	default=''
-)
-parser.add_argument(
-	"command"
-)
-parser.add_argument(
-	"args",
-	nargs="+"
-)
-parser.add_argument(
-	"-p",
-	"--output-only",
-	help="Only output the command to be run",
-	action="store_true"
-)
-
-args = parser.parse_args()
-
-root = args.root
-
-if args.command == "install":
-	if os.getuid() != 0:
-		log(f"Attempting to escalate privaleges to install {args.args[0]}...", WARNING)
-		sys.exit(os.system(f"sudo {sys.argv[0]} install {args.args[0]}"))
-	if args.args[0].startswith("./"):
-		DebianUtils.install_deb(args.args[0])
-	else:
-		DebianUtils.install_pkg_from_online(args.args[0])
-elif args.command == "test":
-	args = generate_bwrap_args([
-		"neovim",
-	])
-	for arg in args:
-		print(arg)
-
-elif args.command == "run":
-	assert len(args.args) == 2, "Not enough arguments! We need to know what package AND the command!"
-
-	bargs = generate_bwrap_args(
-		[
-			args.args[0],
-		],
-		''.join([x+" " for x in args.args[1]])
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='dalixOS package manager')
+	parser.add_argument(
+		'-r',
+		'--root',
+		help='Root directory of the system',
+		default=''
 	)
-	bargs = ''.join([x + " " for x in bargs])
-	if args.output_only:
-		print(bargs)
-		sys.exit(0)
-	else:
-		sys.exit(os.system(f"bwrap {bargs}"))
+	parser.add_argument(
+		"command"
+	)
+	parser.add_argument(
+		"args",
+		nargs="+"
+	)
+	parser.add_argument(
+		"-p",
+		"--output-only",
+		help="Only output the command to be run",
+		action="store_true"
+	)
+
+	args = parser.parse_args()
+
+	root = args.root
+
+	if args.command == "install":
+		if os.getuid() != 0:
+			log(f"Attempting to escalate privaleges to install {args.args[0]}...", WARNING)
+			sys.exit(os.system(f"sudo {sys.argv[0]} install {args.args[0]}"))
+		if args.args[0].startswith("./"):
+			DebianUtils.install_deb(args.args[0])
+		else:
+			DebianUtils.install_pkg_from_online(args.args[0])
+	elif args.command == "test":
+		args = generate_bwrap_args([
+			"neovim",
+		])
+		for arg in args:
+			print(arg)
+
+	elif args.command == "run":
+		assert len(args.args) == 2, "Not enough arguments! We need to know what package AND the command!"
+
+		bargs = generate_bwrap_args(
+			[
+				args.args[0],
+			],
+			''.join([x+" " for x in args.args[1]])
+		)
+		bargs = ''.join([x + " " for x in bargs])
+		if args.output_only:
+			print(bargs)
+			sys.exit(0)
+		else:
+			sys.exit(os.system(f"bwrap {bargs}"))
