@@ -462,7 +462,21 @@ class System:
 			assert type(out) == Package
 		return output
 
+	def mkdir(path: str):
+		os.system(f"mkdir -p {path}")
+
+	def rm(path: str):
+		os.system(f"rm -rf {path}")
+
+	def cp(src: str, dst: str):
+		os.system(f"cp -r {src} {dst}")
+
+	def touch(path: str):
+		os.system(f"touch {path}")
+
 class DebianUtils:
+	def extract_deb_full(deb: str, out: str) -> str:
+		os.system(f"dpkg-deb -R {deb} {out}")
 	def get_deb_info(path: str) -> dict:
 		"""
 		Extracts metadata from a .deb package.
@@ -475,7 +489,7 @@ class DebianUtils:
 		"""
 		assert os.path.exists(path), "Supplied path does not exist!"
 		with TemporaryDirectory() as tmpdir:
-			os.system(f"dpkg-deb -R {path} {tmpdir}")
+			DebianUtils.extract_deb_full(path, tmpdir)
 			assert os.path.exists(tmpdir + "/DEBIAN/control"), "No control file found in package!"
 			info_list = [] # contains tuples of (key: str, value: str)
 			with open(tmpdir + "/DEBIAN/control") as control:
@@ -500,6 +514,9 @@ class DebianUtils:
 			info[entry_list[0]] = entry_list[1]
 		return info
 
+	def extract_deb(path: str, out: str):
+		os.system(f"dpkg-deb -x {path} {out}")
+
 	def install_deb(path: str, fetch_dependencies: bool = True):
 		"""
 		Installs a .deb package into the system.
@@ -523,7 +540,7 @@ class DebianUtils:
 		with TemporaryDirectory() as tmpdir:
 			# extract pkg
 			log(f"Extracting {path}...")
-			os.system(f"dpkg -x {path} {tmpdir}")
+			DebianUtils.extract_deb(path, tmpdir)
 			# extract metadata
 			info = DebianUtils.get_deb_info(path)
 			info = DebianUtils.deb_to_pkg_info(info)
@@ -536,8 +553,8 @@ class DebianUtils:
 			inst_dir = f"{root}/System/Packages/{info['Package']['Name']}***{info['Package']['Version']}"
 
 			if os.path.exists(inst_dir):
-				os.system(f"rm -R {inst_dir}")
-			os.system(f"mkdir -p {inst_dir}")
+				System.rm(inst_dir)
+			System.mkdir(inst_dir)
 
 			# create symlinks
 			chroot = inst_dir + "/chroot"
@@ -558,7 +575,7 @@ class DebianUtils:
 			)
 
 			# install config
-			os.system(f"touch {inst_dir}/pkg-info")
+			System.touch(f"{inst_dir}/pkg-info")
 			with open(f"{inst_dir}/pkg-info", "w") as info_f:
 				info_f.write(
 					tomli_w.dumps(
@@ -570,6 +587,10 @@ class DebianUtils:
 			if "Dependencies" in info["Package"] and fetch_dependencies:
 				DebianUtils.install_deps_for_pkg_from_online(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
 
+	def satisfy(dep_string: str, outdir: str):
+		cmd = "apt-get satisfy --download-only"
+		os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={outdir} -y")
+
 	def install_deps_from_online(dep_string: str):
 		"""
 		Downloads and installs all dependencies specified in dep_string.
@@ -579,9 +600,8 @@ class DebianUtils:
 		:param dep_string: A string of dependencies to install
 		"""
 		assert type(dep_string) == str
-		cmd = "apt-get satisfy --download-only"
 		with TemporaryDirectory() as tmpdir:
-			os.system(f"{cmd} \"{dep_string}\" -o Dir::Cache::Archives={tmpdir} -y")
+			DebianUtils.satisfy(dep_string, tmpdir)
 			deps = os.listdir(tmpdir)
 			for dep in deps:
 				if dep[-4:] != ".deb":
