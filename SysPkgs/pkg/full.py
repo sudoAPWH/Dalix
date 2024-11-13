@@ -850,11 +850,11 @@ if __name__ == "__main__":
 		else:
 			DebianUtils.install_pkg_from_online(args.args[0])
 	elif args.command == "test":
-		args = generate_bwrap_args([
+		bargs = generate_bwrap_args([
 			"neovim",
 		])
-		for arg in args:
-			print(arg)
+		for barg in bargs:
+			print(barg)
 
 	elif args.command == "run":
 		assert len(args.args) == 2, "Not enough arguments! We need to know what package AND the command!"
