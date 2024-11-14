@@ -1,7 +1,11 @@
 #!/bin/bash
 
 echo "This script creates disk images for amd64 architecture."
-echo "If you need to install for another architecture, then make a github issue for that, and we'll look into it."
+echo "If you need to install for another architecture, then make a github issue for that, and we will look into it."
+
+read -p 'Press [Enter] to continue'
+
+rm -rf disk.img
 
 # 4GB
 dd if=/dev/zero of=disk.img bs=4096 count=1048576 status=progress
@@ -64,4 +68,6 @@ apt install grub-efi-amd64
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 EOF
 
-sudo losetup -d $(dev)
+sudo umount mnt/boot
+sudo umount mnt
+sudo losetup -d $dev
