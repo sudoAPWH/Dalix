@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "This script creates disk images for amd64 architecture."
+echo "If you need to install for another architecture, then make a github issue for that, and we'll look into it."
+
 # 4GB
 dd if=/dev/zero of=disk.img bs=4096 count=1048576 status=progress
 
@@ -25,7 +28,7 @@ chmod +x build.sh
 
 dev="$(sudo losetup -Pf --show disk.img)"
 
-mkfs.fat -F	32 $(dev)p1
+mkfs.vfat -F 32 $(dev)p1
 mkfs.ext4 $(dev)p2
 
 mkdir mnt
@@ -49,7 +52,16 @@ User
 
 
 EOD
+passwd <<EOD
+1234
+1234
+EOD
+
 /sbin/usermod -aG sudo user
+apt install linux linux-firmware linux-headers
+apt install grub-efi-amd64
+
+/sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 EOF
 
 sudo losetup -d $(dev)
