@@ -21,4 +21,4 @@ resolution without breakage.
 > The goal for dalixOS is to be organized, stable, user friendly, and just work.
 
 If you want more information, you can view our [FAQ](FAQ.md). Or, if you are feeling adventerous you can
-view [Misc](Misc.md).
+view [Developer Info](DeveloperInfo.md).
