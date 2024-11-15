@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eu
 sudo -v
 
 echo "This script creates disk images for amd64 architecture."
@@ -10,6 +11,15 @@ rm -rf disk.img
 
 # 4GB
 dd if=/dev/zero of=disk.img bs=4096 count=1048576 status=progress
+
+handle_error() {
+	sudo umount mnt/* || echo ""
+	sudo umount mnt || echo ""
+	sudo losetup -d /dev/$dev
+	sudo rm -Rf mnt
+}
+
+trap handle_error 0
 
 # make neccesary partitions
 fdisk disk.img <<EOF
@@ -40,7 +50,7 @@ dev="$(sudo losetup -Pf --show disk.img)"
 sudo mkfs.vfat -F 32 ${dev}p1
 sudo mkfs.ext4 ${dev}p2
 
-mkdir mnt
+mkdir -p mnt
 sudo mount ${dev}p2 mnt
 sudo mkdir mnt/boot
 sudo mount ${dev}p1 mnt/boot
@@ -56,7 +66,7 @@ sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
 
 sudo arch-chroot mnt <<EOF
 ls root
-apt install /root/dalixos-base.deb -y
+apt install -y /root/dalixos-base.deb
 /sbin/adduser --home /Users/user user <<EOD
 1234
 1234
@@ -72,16 +82,19 @@ passwd <<EOD
 EOD
 
 /sbin/usermod -aG sudo user
-apt install linux-image-amd64 firmware-linux-free linux-headers-amd64 -y
-apt install grub-efi-amd64 -y
+apt install -y linux-image-amd64 firmware-linux-free linux-headers-amd64
+apt install -y grub-efi-amd64
+apt install -y network-manager ifupdown isc-dhcp-client pppoeconf wpasupplication wpagui wireless-tools iw iproute2 
+apt install -y iptables nftables iputils-ping iputils-arping iputils-tracepath ethtool mtr nmap
+apt install -y tcptrace ntopng dnsutils dlint dnstracer
 
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 /sbin/grub-mkconfig -o /boot/grub/grub.cfg
 EOF
 
 sleep 4
-sudo umount mnt/*
-sudo umount mnt
-sudo losetup -d $dev
+sudo umount mnt/* || echo ""
+sudo umount mnt || echo ""
+sudo losetup -d $dev || echo ""
 
 sudo rm -Rf mnt
