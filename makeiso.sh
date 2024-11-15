@@ -32,9 +32,9 @@ chmod +x build.sh
 
 dev="$(sudo losetup -Pf --show disk.img)"
 
-echo "Please enter your sudo password"
-sudo -k
-sudo -v
+# echo "Please enter your sudo password"
+# sudo -k
+# sudo -v
 
 sudo mkfs.vfat -F 32 ${dev}p1
 sudo mkfs.ext4 ${dev}p2
@@ -48,12 +48,14 @@ sudo mount ${dev}p1 mnt/boot
 
 # sudo debootstrap unstable mnt http://deb.debian.org/debian/
 sudo tar -xvf Resources/base.tar
-sudo cp -r base mnt
+sudo mv base/* mnt/
 sudo rm -Rf base
-cp Resources/dalixos-base.deb mnt/root/
+ls mnt
+sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
 
 sudo arch-chroot mnt <<EOF
-apt install ./root/dalixos-base.deb
+ls root
+apt install /root/dalixos-base.deb -y
 /sbin/adduser --home /Users/user user <<EOD
 1234
 1234
@@ -69,8 +71,8 @@ passwd <<EOD
 EOD
 
 /sbin/usermod -aG sudo user
-apt install linux linux-firmware linux-headers
-apt install grub-efi-amd64
+apt install linux-image-amd64 firmware-linux-free linux-headers-amd64 -y
+apt install grub-efi-amd64 -y
 
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 EOF
