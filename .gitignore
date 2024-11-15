@@ -6,6 +6,7 @@ External/*
 build
 build/*
 Resources/dalixos-base.deb
+Resources/base.tar.xz
 .vscode/
 disk.img
 mnt

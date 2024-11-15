@@ -47,7 +47,7 @@ sudo mount ${dev}p1 mnt/boot
 # Now we have the file hiearchy in mnt/
 
 # sudo debootstrap unstable mnt http://deb.debian.org/debian/
-sudo tar -xvf Resources/base.tar
+sudo tar -xvf Resources/base.tar.xz
 sudo mv base/* mnt/
 sudo rm -Rf base
 ls mnt
