@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo -v
 
 echo "This script creates disk images for amd64 architecture."
 echo "If you need to install for another architecture, then make a github issue for that, and we will look into it."
@@ -75,6 +76,7 @@ apt install linux-image-amd64 firmware-linux-free linux-headers-amd64 -y
 apt install grub-efi-amd64 -y
 
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
+/sbin/grub-mkconfig -o /boot/grub/grub.cfg
 EOF
 
 sleep 4
