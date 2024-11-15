@@ -84,7 +84,7 @@ EOD
 /sbin/usermod -aG sudo user
 apt install -y linux-image-amd64 firmware-linux-free linux-headers-amd64
 apt install -y grub-efi-amd64
-apt install -y network-manager ifupdown isc-dhcp-client pppoeconf wpasupplicant wpagui wireless-tools iw iproute2 
+apt install -y network-manager ifupdown isc-dhcp-client pppoeconf wpasupplicant wireless-tools iw iproute2 
 apt install -y iptables nftables iputils-ping iputils-arping iputils-tracepath ethtool mtr nmap
 apt install -y tcptrace ntopng dnsutils dlint dnstracer
 
