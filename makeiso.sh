@@ -15,7 +15,7 @@ dd if=/dev/zero of=disk.img bs=4096 count=1048576 status=progress
 handle_error() {
 	sudo umount mnt/* || echo ""
 	sudo umount mnt || echo ""
-	sudo losetup -d /dev/$dev
+	sudo losetup -d $dev
 	sudo rm -Rf mnt
 }
 
@@ -84,7 +84,7 @@ EOD
 /sbin/usermod -aG sudo user
 apt install -y linux-image-amd64 firmware-linux-free linux-headers-amd64
 apt install -y grub-efi-amd64
-apt install -y network-manager ifupdown isc-dhcp-client pppoeconf wpasupplication wpagui wireless-tools iw iproute2 
+apt install -y network-manager ifupdown isc-dhcp-client pppoeconf wpasupplicant wpagui wireless-tools iw iproute2 
 apt install -y iptables nftables iputils-ping iputils-arping iputils-tracepath ethtool mtr nmap
 apt install -y tcptrace ntopng dnsutils dlint dnstracer
 
@@ -93,8 +93,12 @@ apt install -y tcptrace ntopng dnsutils dlint dnstracer
 EOF
 
 sleep 4
-sudo umount mnt/* || echo ""
-sudo umount mnt || echo ""
-sudo losetup -d $dev || echo ""
+# sudo umount mnt/* || echo ""
+# sudo umount mnt || echo ""
+# sudo losetup -d $dev || echo ""
+# 
+# sudo rm -Rf mnt
+handle_error()
 
-sudo rm -Rf mnt
+
+exit 0
