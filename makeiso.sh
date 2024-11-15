@@ -70,6 +70,9 @@ apt install grub-efi-amd64
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 EOF
 
-sudo umount mnt/boot
+sleep 4
+sudo umount mnt/*
 sudo umount mnt
 sudo losetup -d $dev
+
+sudo rm -Rf mnt
