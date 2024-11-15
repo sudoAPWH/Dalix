@@ -33,6 +33,8 @@ chmod +x build.sh
 dev="$(sudo losetup -Pf --show disk.img)"
 
 echo "Please enter your sudo password"
+sudo -k
+sudo -v
 
 sudo mkfs.vfat -F 32 ${dev}p1
 sudo mkfs.ext4 ${dev}p2
@@ -44,7 +46,8 @@ sudo mount ${dev}p1 mnt/boot
 
 # Now we have the file hiearchy in mnt/
 
-sudo debootstrap unstable mnt http://deb.debian.org/debian/
+# sudo debootstrap unstable mnt http://deb.debian.org/debian/
+cd mnt && sudo tar -xvf ../Resources/base.tar && cd ..
 cp Resources/dalixos-base.deb mnt/root/
 
 sudo arch-chroot mnt <<EOF
