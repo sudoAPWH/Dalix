@@ -47,7 +47,9 @@ sudo mount ${dev}p1 mnt/boot
 # Now we have the file hiearchy in mnt/
 
 # sudo debootstrap unstable mnt http://deb.debian.org/debian/
-cd mnt && sudo tar -xvf ../Resources/base.tar && cd ..
+sudo tar -xvf Resources/base.tar
+sudo cp -r base mnt
+sudo rm -Rf base
 cp Resources/dalixos-base.deb mnt/root/
 
 sudo arch-chroot mnt <<EOF
