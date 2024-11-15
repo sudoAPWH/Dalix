@@ -8,3 +8,5 @@ build/*
 Resources/dalixos-base.deb
 .vscode/
 disk.img
+mnt
+mnt/*

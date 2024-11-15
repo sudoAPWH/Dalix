@@ -32,13 +32,15 @@ chmod +x build.sh
 
 dev="$(sudo losetup -Pf --show disk.img)"
 
-mkfs.vfat -F 32 $(dev)p1
-mkfs.ext4 $(dev)p2
+echo "Please enter your sudo password"
+
+sudo mkfs.vfat -F 32 ${dev}p1
+sudo mkfs.ext4 ${dev}p2
 
 mkdir mnt
-sudo mount $(dev)p2 mnt
+sudo mount ${dev}p2 mnt
 sudo mkdir mnt/boot
-sudo mount $(dev)p1 mnt/boot
+sudo mount ${dev}p1 mnt/boot
 
 # Now we have the file hiearchy in mnt/
 
