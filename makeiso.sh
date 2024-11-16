@@ -74,6 +74,7 @@ sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
 sudo arch-chroot mnt <<EOF
 ls root
 apt install -y /root/dalixos-base.deb
+ln -sfT / /System/Packages/base/chroot
 /sbin/adduser --home /Users/user user <<EOD
 1234
 1234
@@ -104,7 +105,7 @@ sleep 4
 sudo umount mnt/* mnt || echo "umount returned errors, but it should be okay"
 # sudo umount mnt || echo ""
 sudo losetup -d $dev || echo "Loop device is not around? Ignoring..."
-# 
+#
 sudo rm -Rf mnt || echo "Failiure in removing mnt, see error logs for more details..."
 # Clean up afterward
 # handle_error()

@@ -454,6 +454,7 @@ class System:
 		:return list(Package):
 		"""
 		assert type(pkgs) == list
+		pkgs.append(Package("base", Version("0.1.0"), f"{root}/System/Packages/base"))
 		output = []
 		for pkg in pkgs:
 			output.extend(System.fill_dep_tree(pkg, ignore_list=output))
@@ -544,8 +545,8 @@ class DebianUtils:
 			# extract metadata
 			info = DebianUtils.get_deb_info(path)
 			info = DebianUtils.deb_to_pkg_info(info)
-			info["other"] = {}
-			info["other"]["source"] = "deb"
+			info["Other"] = {}
+			info["Other"]["source"] = "deb"
 			# install package
 
 			log(f"Installing {path}...")

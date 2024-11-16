@@ -8,6 +8,21 @@ mkdir -p build/Users
 mkdir -p build/Volumes
 mkdir -p build/Applications
 
+mkdir -p build/System/Packages/base
+cat >> build/System/Packages/base/pkg-info <<EOF
+InfoType = 1
+[Package]
+Name = base
+Version = 0.1.0
+Arch = all
+Maintainer = dalixOS Team
+Homepage = figsystems.github.io/dalixOS
+Description = '''
+A package which is included for all packages
+'''
+Dependencies = ""
+EOF
+
 
 cp SysPkgs/pkg/full.py build/usr/bin/pkg
 cp control build/DEBIAN/control
