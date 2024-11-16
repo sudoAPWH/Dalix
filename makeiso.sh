@@ -13,10 +13,14 @@ rm -rf disk.img
 dd if=/dev/zero of=disk.img bs=4096 count=1048576 status=progress
 
 handle_error() {
+	sleep 4
 	sudo umount mnt/* || echo ""
 	sudo umount mnt || echo ""
+	sleep 2
 	sudo losetup -d $dev
+	sleep 1
 	sudo rm -Rf mnt
+	exit 0
 }
 
 trap handle_error 0
@@ -58,12 +62,15 @@ sudo mount ${dev}p1 mnt/boot
 # Now we have the file hiearchy in mnt/
 
 # sudo debootstrap unstable mnt http://deb.debian.org/debian/
+# Copy base system, and dalixos-base.deb to mnt
 sudo tar -xvf Resources/base.tar.xz
 sudo mv base/* mnt/
 sudo rm -Rf base
 ls mnt
 sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
 
+
+# Preform operations inside chroot
 sudo arch-chroot mnt <<EOF
 ls root
 apt install -y /root/dalixos-base.deb
@@ -82,23 +89,22 @@ passwd <<EOD
 EOD
 
 /sbin/usermod -aG sudo user
-apt install -y linux-image-amd64 firmware-linux-free linux-headers-amd64
-apt install -y grub-efi-amd64
-apt install -y network-manager ifupdown isc-dhcp-client pppoeconf wpasupplicant wireless-tools iw iproute2 
-apt install -y iptables nftables iputils-ping iputils-arping iputils-tracepath ethtool mtr nmap
-apt install -y tcptrace ntopng dnsutils dlint dnstracer
+apt install -y linux-image-amd64 firmware-linux-free linux-headers-amd64 grub-efi-amd64 arch-install-scripts locales
+dpkg-reconfigure locales
 
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 /sbin/grub-mkconfig -o /boot/grub/grub.cfg
+# genfstab / -U >> /etc/fstab
 EOF
 
+# Generate fstab
+sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
+
 sleep 4
-# sudo umount mnt/* || echo ""
+sudo umount mnt/* mnt || echo "umount returned errors, but it should be okay"
 # sudo umount mnt || echo ""
-# sudo losetup -d $dev || echo ""
+sudo losetup -d $dev || echo "Loop device is not around? Ignoring..."
 # 
-# sudo rm -Rf mnt
-handle_error()
-
-
-exit 0
+sudo rm -Rf mnt || echo "Failiure in removing mnt, see error logs for more details..."
+# Clean up afterward
+# handle_error()
