@@ -77,7 +77,11 @@ sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
 sudo arch-chroot mnt <<EOF
 ls root
 apt install -y /root/dalixos-base.deb
-ln -sfT / /System/Packages/base/chroot
+
+
+# ln -sfT / /System/Packages/base/chroot
+
+
 /sbin/adduser --home /Users/user user <<EOD
 1234
 1234

@@ -8,8 +8,8 @@ mkdir -p build/Users
 mkdir -p build/Volumes
 mkdir -p build/Applications
 
-mkdir -p build/System/Packages/base
-cat >> build/System/Packages/base/pkg-info <<EOF
+mkdir -p 'build/System/Packages/base***0.1.0'
+cat >> build/System/Packages/base\*\*\*0.1.0/pkg-info <<EOF
 InfoType = 1
 [Package]
 Name = "base"

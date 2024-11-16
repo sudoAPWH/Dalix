@@ -450,6 +450,8 @@ class System:
 
 	def fill_dep_tree_from_list(pkgs: list) -> list:
 		"""
+		Fills a tree of needed packages from a list of packages.
+		Also, includes the base package in this result.
 		:param deps: A list of Packages
 		:return list(Package):
 		"""
@@ -719,8 +721,8 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	assert type(cmd) == str
 	global root
 	args = []
-	args.append(f"--overlay-src {os.path.join("/", root)}")
-	args.append(f"--tmp-overlay /")
+	# args.append(f"--overlay-src {os.path.join("/", root)}")
+	# args.append(f"--tmp-overlay /")
 	args.append(f"--bind {root}/System /System")
 	args.append(f"--bind {root}/Users /Users")
 	args.append(f"--bind {root}/Volumes /Volumes")
