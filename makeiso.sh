@@ -1,4 +1,5 @@
 #!/bin/bash
+shopt -s extglob
 set -eu
 sudo -v
 
@@ -63,8 +64,10 @@ sudo mount ${dev}p1 mnt/boot
 
 # sudo debootstrap unstable mnt http://deb.debian.org/debian/
 # Copy base system, and dalixos-base.deb to mnt
-sudo tar -xvf Resources/base.tar.xz
-sudo mv base/* mnt/
+sudo rm -Rf base
+sudo tar -xkf Resources/base.tar.xz
+sudo mv base/!(boot) mnt/
+sudo mv base/boot/* mnt/boot/
 sudo rm -Rf base
 ls mnt
 sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
@@ -90,7 +93,6 @@ passwd <<EOD
 EOD
 
 /sbin/usermod -aG sudo user
-apt install -y linux-image-amd64 firmware-linux-free linux-headers-amd64 grub-efi-amd64 arch-install-scripts locales
 dpkg-reconfigure locales
 
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable

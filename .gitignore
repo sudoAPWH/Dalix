@@ -11,3 +11,5 @@ Resources/base.tar.xz
 disk.img
 mnt
 mnt/*
+base
+base/*

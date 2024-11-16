@@ -12,11 +12,10 @@ mkdir -p build/System/Packages/base
 cat >> build/System/Packages/base/pkg-info <<EOF
 InfoType = 1
 [Package]
-Name = base
-Version = 0.1.0
-Arch = all
-Maintainer = dalixOS Team
-Homepage = figsystems.github.io/dalixOS
+Name = "base"
+Version = "0.1.0"
+Arch = "all"
+Maintainer = "dalixOS Team"
 Description = '''
 A package which is included for all packages
 '''
