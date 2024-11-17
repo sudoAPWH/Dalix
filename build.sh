@@ -17,7 +17,7 @@ Version = "0.1.0"
 Arch = "all"
 Maintainer = "dalixOS Team"
 Description = '''
-A package which is included for all packages, which also consists of a rootfs
+A package which is included for all packages
 '''
 Dependencies = ""
 EOF
