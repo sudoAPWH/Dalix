@@ -520,7 +520,7 @@ class DebianUtils:
 	def extract_deb(path: str, out: str):
 		os.system(f"dpkg-deb -x {path} {out}")
 
-	def install_deb(path: str, fetch_dependencies: bool = True, make_symlinks: bool = True):
+	def install_deb(path: str, fetch_dependencies: bool = True, make_symlinks: bool = False):
 		"""
 		Installs a .deb package into the system.
 
