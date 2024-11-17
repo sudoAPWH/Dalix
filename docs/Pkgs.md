@@ -106,3 +106,5 @@ base
 ├── pkg-info
 └── chroot
 ```
+
+The base system is also added to base's dependencies. More info in [MakeISO](MakeISO.md)

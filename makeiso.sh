@@ -111,7 +111,7 @@ EOF
 sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 
 # Generate base package
-ln -sfT mnt/System/Packages/base\*\*\*0.1.0 mnt/System/Packages/base*
+# ln -sfT mnt/System/Packages/base\*\*\*0.1.0 mnt/System/Packages/base*
 # mkdir -p 'mnt/System/Packages/base***0.1.0/chroot'
 # sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base\*\*\*0.1.0/chroot/
 
