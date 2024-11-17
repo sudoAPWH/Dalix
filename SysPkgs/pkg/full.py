@@ -239,7 +239,7 @@ class System:
 		"""
 		packages = os.listdir(f"{root}/System/Packages")
 		for pkg in packages:
-			pkg_name = pkg.split("***")
+			pkg_name = pkg.split("---")
 			if len(pkg_name) != 2:
 				log(f"Corrupt package in system! \"{pkg}\" Skipping for now.", WARNING)
 				continue
@@ -553,7 +553,7 @@ class DebianUtils:
 
 			log(f"Installing {path}...")
 
-			inst_dir = f"{root}/System/Packages/{info['Package']['Name']}***{info['Package']['Version']}"
+			inst_dir = f"{root}/System/Packages/{info['Package']['Name']}---{info['Package']['Version']}"
 
 			if os.path.exists(inst_dir):
 				System.rm(inst_dir)
@@ -725,7 +725,7 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	assert type(cmd) == str
 	global root
 	args = []
-	# args.append(f"--overlay-src {os.path.join(root, "System/Packages/base***0.1.0/chroot")}")
+	# args.append(f"--overlay-src {os.path.join(root, "System/Packages/base---0.1.0/chroot")}")
 	# args.append(f"--tmp-overlay /")
 	args.append(f"--bind {root}/System /System")
 	args.append(f"--bind {root}/Users /Users")
@@ -861,10 +861,11 @@ if __name__ == "__main__":
 		if os.getuid() != 0:
 			log(f"Attempting to escalate privaleges to install {args.args[0]}...", WARNING)
 			sys.exit(os.system(f"sudo {sys.argv[0]} install {args.args[0]}"))
-		if args.args[0].startswith("./"):
-			DebianUtils.install_deb(args.args[0], make_symlinks=not args.no_symlinks)
-		else:
-			DebianUtils.install_pkg_from_online(args.args[0], make_symlinks=not args.no_symlinks)
+		for p in args.args:
+			if p.startswith("./"):
+				DebianUtils.install_deb(p, make_symlinks=not args.no_symlinks)
+			else:
+				DebianUtils.install_pkg_from_online(p, make_symlinks=not args.no_symlinks)
 	elif args.command == "test":
 		bargs = generate_bwrap_args([
 			"neovim",

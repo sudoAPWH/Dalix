@@ -3,7 +3,7 @@
 ## Pkg Bundle Structure
 For an example package of libsqsh
 ```
-/System/Packages/libsqsh.pkg/
+/System/Packages/libsqsh---.1.2.3/
 ├── pkg-info
 └── chroot
 	├── usr

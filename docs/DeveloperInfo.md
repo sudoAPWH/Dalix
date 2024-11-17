@@ -65,7 +65,7 @@ Applications are not aware of each other, but packages are.
 │	└── LibreOffice
 ├── System
 │	├── Packages
-│	│	└── libsqsh***1.2.3
+│	│	└── libsqsh---1.2.3
 │	└── Config
 └── Volumes
 	└── USB3.0
