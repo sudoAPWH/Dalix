@@ -456,7 +456,7 @@ class System:
 		:return list(Package):
 		"""
 		assert type(pkgs) == list
-		pkgs.append(Package("base", Version("0.1.0"), f"{root}/System/Packages/base***0.1.0"))
+		pkgs.append(System.get_pkg("base"))
 		output = []
 		for pkg in pkgs:
 			output.extend(System.fill_dep_tree(pkg, ignore_list=output))
@@ -520,7 +520,7 @@ class DebianUtils:
 	def extract_deb(path: str, out: str):
 		os.system(f"dpkg-deb -x {path} {out}")
 
-	def install_deb(path: str, fetch_dependencies: bool = True):
+	def install_deb(path: str, fetch_dependencies: bool = True, make_symlinks: bool = True):
 		"""
 		Installs a .deb package into the system.
 
@@ -561,13 +561,14 @@ class DebianUtils:
 
 			# create symlinks
 			chroot = inst_dir + "/chroot"
+			if make_symlinks:
 			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
 			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
 			# System.symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
-			System.symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
-			System.symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
+				System.symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
+				System.symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
 			# System.symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
-			System.symlink(f"{chroot}/usr/var", f"{chroot}/var")
+				System.symlink(f"{chroot}/usr/var", f"{chroot}/var")
 
 			# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/chroot")
 			copytree(
@@ -621,7 +622,7 @@ class DebianUtils:
 		cmd = "apt-get install --download-only --reinstall"
 		os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={out} -y")
 
-	def install_pkg_from_online(pkg: str):
+	def install_pkg_from_online(pkg: str, make_symlinks: bool = True):
 		"""
 		:param str: A string repersenting the package to install
 		"""
@@ -634,7 +635,7 @@ class DebianUtils:
 					continue
 				log(f"Going to install {pkg}...")
 				try:
-					installed_pkg = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
+					installed_pkg = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False, make_symlinks=make_symlinks)
 					deps = installed_pkg.get_info()["Package"]["Dependencies"]
 					if deps.rstrip().lstrip() == "":
 						continue
@@ -845,6 +846,12 @@ if __name__ == "__main__":
 		help="Only output the command to be run",
 		action="store_true"
 	)
+	parser.add_argument(
+		"-n",
+		"--no-symlinks",
+		help="Don't create FHS symlinks for the package.",
+		action="store_true"
+	)
 
 	args = parser.parse_args()
 
@@ -855,9 +862,9 @@ if __name__ == "__main__":
 			log(f"Attempting to escalate privaleges to install {args.args[0]}...", WARNING)
 			sys.exit(os.system(f"sudo {sys.argv[0]} install {args.args[0]}"))
 		if args.args[0].startswith("./"):
-			DebianUtils.install_deb(args.args[0])
+			DebianUtils.install_deb(args.args[0], make_symlinks=not args.no_symlinks)
 		else:
-			DebianUtils.install_pkg_from_online(args.args[0])
+			DebianUtils.install_pkg_from_online(args.args[0], make_symlinks=not args.no_symlinks)
 	elif args.command == "test":
 		bargs = generate_bwrap_args([
 			"neovim",
