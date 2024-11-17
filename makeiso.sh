@@ -65,6 +65,8 @@ sudo mount ${dev}p1 mnt/boot
 # sudo debootstrap unstable mnt http://deb.debian.org/debian/
 # Copy base system, and dalixos-base.deb to mnt
 sudo rm -Rf base
+echo "Extracting base system..."
+echo "This may take a while..."
 sudo tar -xkf Resources/base.tar.xz
 sudo mv base/!(boot) mnt/
 sudo mv base/boot/* mnt/boot/
@@ -109,7 +111,7 @@ sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 
 # Generate base package
 mkdir -p 'mnt/System/Packages/base***0.1.0/chroot'
-sudo cp -r mnt/!(System|Users|Volumes|Applications) mnt/System/Packages/base\*\*\*0.1.0/chroot/
+# sudo cp -r mnt/!(System|Users|Volumes|Applications) mnt/System/Packages/base\*\*\*0.1.0/chroot/
 
 sleep 4
 sudo umount mnt/* mnt || echo "umount returned errors, but it should be okay"

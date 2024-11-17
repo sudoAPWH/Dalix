@@ -626,7 +626,6 @@ class DebianUtils:
 		:param str: A string repersenting the package to install
 		"""
 		assert type(pkg) == str
-ls mnt/System/Packages
 		with TemporaryDirectory() as tmpdir:
 			DebianUtils.apt_install(pkg, tmpdir)
 			pkgs = os.listdir(tmpdir)
@@ -866,7 +865,7 @@ if __name__ == "__main__":
 			[
 				args.args[0],
 			],
-			''.join([x+" " for x in args.args[1]])
+			''.join([x+" " for x in args.args[1:]])
 		)
 		bargs = ''.join([x + " " for x in bargs])
 		if args.output_only:
