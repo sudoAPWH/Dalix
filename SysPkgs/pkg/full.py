@@ -636,6 +636,8 @@ class DebianUtils:
 				try:
 					installed_pkg = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
 					deps = installed_pkg.get_info()["Package"]["Dependencies"]
+					if deps.rstrip().lstrip() == "":
+						continue
 					DebianUtils.install_deps_from_online(deps)
 				except Exception as e:
 					log(f"Failed to install {pkg}! Skipping for now...", WARNING)
@@ -722,8 +724,8 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	assert type(cmd) == str
 	global root
 	args = []
-	args.append(f"--overlay-src {os.path.join(root, "System/Packages/base***0.1.0/chroot")}")
-	args.append(f"--tmp-overlay /")
+	# args.append(f"--overlay-src {os.path.join(root, "System/Packages/base***0.1.0/chroot")}")
+	# args.append(f"--tmp-overlay /")
 	args.append(f"--bind {root}/System /System")
 	args.append(f"--bind {root}/Users /Users")
 	args.append(f"--bind {root}/Volumes /Volumes")

@@ -18,17 +18,9 @@ if __name__ == "__main__":
 		pkg = pkg.split(" ")
 		name = pkg[0]
 		version = pkg[3]
-
-		pkg = name
+		arch = pkg[4]
 
 		if pkg != "":
 			# IDK
 			pass
-		os.system(f"mkdir -p System/Packages/{pkg}/chroot")
-		os.system(f"touch System/Packages/{pkg}/pkg-info")
-		with open(f"System/Packages/{pkg}/pkg-info", "w") as f:
-			f.write("""
-[Package]
-Name = {0}
-Version = 123.123.123
-""".format(pkg))
+		print(f"{name} {version} {arch}")
