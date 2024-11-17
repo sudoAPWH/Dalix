@@ -586,9 +586,11 @@ class DebianUtils:
 						multiline_strings=True
 					),
 				)
+			pkg = Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir)
 			# install dependencies from debians servers.
 			if "Dependencies" in info["Package"] and fetch_dependencies:
-				DebianUtils.install_deps_for_pkg_from_online(Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir))
+				DebianUtils.install_deps_for_pkg_from_online(pkg)
+			return pkg
 
 	def apt_satisfy(dep_string: str, outdir: str):
 		cmd = "apt-get satisfy --download-only"
@@ -634,7 +636,8 @@ class DebianUtils:
 					continue
 				log(f"Going to install {pkg}...")
 				try:
-					DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
+					pkg2 = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
+					# FIXME: install deps
 				except Exception as e:
 					log(f"Failed to install {pkg}! Skipping for now...", WARNING)
 					log(e, WARNING)
