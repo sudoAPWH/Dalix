@@ -636,8 +636,9 @@ class DebianUtils:
 					continue
 				log(f"Going to install {pkg}...")
 				try:
-					pkg2 = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
-					# FIXME: install deps
+					installed_pkg = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
+					deps = installed_pkg.get_info()["Package"]["Depends"]
+					DebianUtils.install_deps_from_online(deps)
 				except Exception as e:
 					log(f"Failed to install {pkg}! Skipping for now...", WARNING)
 					log(e, WARNING)
@@ -762,7 +763,7 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 					break
 			else:
 				src_path = dir.fullpath[len(root):]
-				args.append(f"--symlink {dir.bwrap_loc} {src_path}")
+				args.append(f"--symlink {src_path} {dir.bwrap_loc}")
 				symlinked.append(dir.bwrap_loc)
 		elif dir.occurences > 1:
 			args.append(f"--dir {dir.bwrap_loc}")
@@ -781,7 +782,7 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 					break
 			else:
 				src_path = file.fullpath[len(root):]
-				args.append(f"--symlink {file.bwrap_loc} {src_path}")
+				args.append(f"--symlink {src_path} {file.bwrap_loc}")
 
 	args.append(cmd)
 	return args
