@@ -620,9 +620,9 @@ class DebianUtils:
 
 	def apt_install(pkg: str, out: str):
 		cmd = "apt-get install --download-only --reinstall"
-		os.system(f"{cmd} \"{pkg}\" -o Dir::Cache::Archives={out} -y")
+		os.system(f"{cmd} {pkg} -o Dir::Cache::Archives={out} -y")
 
-	def install_pkg_from_online(pkg: str, make_symlinks: bool = True):
+	def install_pkg_from_online(pkg: str, make_symlinks: bool = True, fetch_deps=True):
 		"""
 		:param str: A string repersenting the package to install
 		"""
@@ -639,7 +639,8 @@ class DebianUtils:
 					deps = installed_pkg.get_info()["Package"]["Dependencies"]
 					if deps.rstrip().lstrip() == "":
 						continue
-					DebianUtils.install_deps_from_online(deps)
+					if fetch_deps:
+						DebianUtils.install_deps_from_online(deps)
 				except Exception as e:
 					log(f"Failed to install {pkg}! Skipping for now...", WARNING)
 					log(e, WARNING)
@@ -852,6 +853,12 @@ if __name__ == "__main__":
 		help="Don't create FHS symlinks for the package.",
 		action="store_true"
 	)
+	parser.add_argument(
+		"-b",
+		"--no-deps",
+		help="Don't fetch dependencies",
+		action="store_true"
+	)
 
 	args = parser.parse_args()
 
@@ -861,11 +868,13 @@ if __name__ == "__main__":
 		if os.getuid() != 0:
 			log(f"Attempting to escalate privaleges to install {args.args[0]}...", WARNING)
 			sys.exit(os.system(f"sudo {sys.argv[0]} install {args.args[0]}"))
-		for p in args.args:
-			if p.startswith("./"):
-				DebianUtils.install_deb(p, make_symlinks=not args.no_symlinks)
-			else:
-				DebianUtils.install_pkg_from_online(p, make_symlinks=not args.no_symlinks)
+		# for p in args.args:
+			# if p.startswith("./"):
+				# DebianUtils.install_deb(p, make_symlinks=not args.no_symlinks)
+		a = ""
+		for arg in args.args:
+			a += arg + " "
+		DebianUtils.install_pkg_from_online(a, make_symlinks=not args.no_symlinks)
 	elif args.command == "test":
 		bargs = generate_bwrap_args([
 			"neovim",

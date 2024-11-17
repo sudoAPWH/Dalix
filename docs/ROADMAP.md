@@ -13,5 +13,5 @@
 	- [x] Clean up code a bit
 	- [x] Clean up build process
 		- [x] Make pkg be a .deb package
-	- [ ] Change confusing function names like deps_info
+	- [x] Change confusing function names like deps_info
 	- [ ] Post install scripts
