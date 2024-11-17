@@ -566,7 +566,7 @@ class DebianUtils:
 			# System.symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
 			System.symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
 			System.symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
-			System.symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
+			# System.symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
 			System.symlink(f"{chroot}/usr/var", f"{chroot}/var")
 
 			# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/chroot")
@@ -600,8 +600,6 @@ class DebianUtils:
 		"""
 		Downloads and installs all dependencies specified in dep_string.
 
-		:raises FileNotFoundError: Apt-get failed to download the specified package.
-		:raises Exception: Any other exception will be raised if the install fails.
 		:param dep_string: A string of dependencies to install
 		"""
 		assert type(dep_string) == str
@@ -637,7 +635,7 @@ class DebianUtils:
 				log(f"Going to install {pkg}...")
 				try:
 					installed_pkg = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False)
-					deps = installed_pkg.get_info()["Package"]["Depends"]
+					deps = installed_pkg.get_info()["Package"]["Dependencies"]
 					DebianUtils.install_deps_from_online(deps)
 				except Exception as e:
 					log(f"Failed to install {pkg}! Skipping for now...", WARNING)
@@ -724,8 +722,8 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	assert type(cmd) == str
 	global root
 	args = []
-	# args.append(f"--overlay-src {os.path.join("/", root)}")
-	# args.append(f"--tmp-overlay /")
+	args.append(f"--overlay-src {os.path.join(root, "System/Packages/base***0.1.0/chroot")}")
+	args.append(f"--tmp-overlay /")
 	args.append(f"--bind {root}/System /System")
 	args.append(f"--bind {root}/Users /Users")
 	args.append(f"--bind {root}/Volumes /Volumes")
@@ -751,6 +749,7 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 	# if occurence count > 1, create directory
 	symlinked = []
 	for dir in directories:
+		if dir.pkg.name == "base": continue
 		if dir.occurences == None:
 			log(dir, ERROR)
 			continue
@@ -766,13 +765,15 @@ def generate_bwrap_args(deps: list, cmd: str) -> list:
 				args.append(f"--symlink {src_path} {dir.bwrap_loc}")
 				symlinked.append(dir.bwrap_loc)
 		elif dir.occurences > 1:
-			args.append(f"--dir {dir.bwrap_loc}")
+			pass
+			# args.append(f"--dir {dir.bwrap_loc}")
 
 	# for each file...
 	# if occurence count = 1, symlink
 	# if occurence count > 1, only the file closest to the main package will be symlinked
 
 	for file in files:
+		if file.pkg.name == "base": continue
 		if True: # file.occurences == 1:
 			# Everything is mounted within / so we don't have to worry about root inside the
 			# container. But outside of the container we do. therfore, src_path must be to
@@ -863,7 +864,7 @@ if __name__ == "__main__":
 			print(barg)
 
 	elif args.command == "run":
-		assert len(args.args) == 2, "Not enough arguments! We need to know what package AND the command!"
+		assert len(args.args) >= 2, "Not enough arguments! We need to know what package AND the command!"
 
 		bargs = generate_bwrap_args(
 			[

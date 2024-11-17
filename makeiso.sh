@@ -111,12 +111,23 @@ sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 
 # Generate base package
 mkdir -p 'mnt/System/Packages/base***0.1.0/chroot'
-# sudo cp -r mnt/!(System|Users|Volumes|Applications) mnt/System/Packages/base\*\*\*0.1.0/chroot/
+sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base\*\*\*0.1.0/chroot/
 
-sleep 4
-sudo umount mnt/* mnt || echo "umount returned errors, but it should be okay"
+sudo arch-chroot mnt <<EOF
+chown -R user:user '/System/Packages/base***0.1.0/chroot'
+EOF
+
+unset nounset
+unset errexit
+sleep 2
+sudo umount mnt/proc
+sleep 2
+sudo umount mnt/proc
+
+sudo umount mnt/* mnt
 # sudo umount mnt || echo ""
 sudo losetup -d $dev || echo "Loop device is not around? Ignoring..."
+sleep 1
 #
 sudo rm -Rf mnt || echo "Failiure in removing mnt, see error logs for more details..."
 # Clean up afterward
