@@ -104,9 +104,11 @@ dpkg-reconfigure locales
 /sbin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 /sbin/grub-mkconfig -o /boot/grub/grub.cfg
 # genfstab / -U >> /etc/fstab
+pkg-lister -n -r
 pkg-lister -n -r >> base-pkgs.txt
-pkg install $(pkg-lister -n -r)
 EOF
+
+./SysPkgs/pkg/full.py install $(cat mnt/base-pkgs.txt) --root "mnt"
 
 # Generate fstab
 sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'

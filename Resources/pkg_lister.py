@@ -24,16 +24,18 @@ if __name__ == "__main__":
 		pkg = pkg.replace("[", "")
 		pkg = pkg.replace("]", "")
 		pkg = pkg.split(" ")
-		name = pkg[0]
-		version = pkg[3]
-		arch = pkg[4]
+		try:
+			name = pkg[0]
+			version = pkg[3]
+			arch = pkg[4]
+		except IndexError as e:
+			if not args.robot:
+				print(pkg)
 
-		if pkg != "":
-			# IDK
-			pass
 		if args.name:
+			if name == "Listing...": continue
 			if args.robot:
-				print(name, end="")
+				print(name, end=" ")
 			else:
 				print(name)
 		else:
