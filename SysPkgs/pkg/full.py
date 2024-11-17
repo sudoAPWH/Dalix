@@ -456,7 +456,7 @@ class System:
 		:return list(Package):
 		"""
 		assert type(pkgs) == list
-		pkgs.append(Package("base", Version("0.1.0"), f"{root}/System/Packages/base"))
+		pkgs.append(Package("base", Version("0.1.0"), f"{root}/System/Packages/base***0.1.0"))
 		output = []
 		for pkg in pkgs:
 			output.extend(System.fill_dep_tree(pkg, ignore_list=output))
@@ -626,7 +626,7 @@ class DebianUtils:
 		:param str: A string repersenting the package to install
 		"""
 		assert type(pkg) == str
-
+ls mnt/System/Packages
 		with TemporaryDirectory() as tmpdir:
 			DebianUtils.apt_install(pkg, tmpdir)
 			pkgs = os.listdir(tmpdir)

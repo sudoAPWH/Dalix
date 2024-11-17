@@ -107,6 +107,10 @@ EOF
 # Generate fstab
 sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 
+# Generate base package
+mkdir -p 'mnt/System/Packages/base***0.1.0/chroot'
+sudo cp -r mnt/!(System|Users|Volumes|Applications) mnt/System/Packages/base\*\*\*0.1.0/chroot/
+
 sleep 4
 sudo umount mnt/* mnt || echo "umount returned errors, but it should be okay"
 # sudo umount mnt || echo ""

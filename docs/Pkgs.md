@@ -97,10 +97,9 @@ in an involved process, ```pkg``` calulates ```bwrap``` arguments. This process 
 
 Also, there is a special package in the system called ```base```, it is not the system but rather
 a special package that is pulled in by all the others, it is nothing more then a pkg-info and
-a chroot linking to the root directory. An application with sufficient priveleges,
-can add itself/another package to ```base```'s dependencies, to get automatically pulled in. For
-instance, an application installing a font, would create a package for the font, and add it into
-```base```'s deps.
+a debian rootfs. An application with sufficient priveleges, can add itself/another package to
+```base```'s dependencies, to get automatically pulled in. For instance, an application installing a
+font, would create a package for the font, and add it into ```base```'s deps.
 
 ```
 base
