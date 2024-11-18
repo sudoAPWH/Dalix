@@ -46,11 +46,18 @@ etc.
 ```
 
 ## When (a) package(s) are/is pulled in by an app.
+There is two ways we can handle it. One way is the symlink method which is more predictable but doesn't
+scale well and also doesn't handle file, and then there is the overlayfs method which will be more
+resource intensive while running, but would be more predictable and simple. Currently only the symlink
+method is detailed but in the future the overlayfs method may get detailed if the cost of starting up
+an app takes 38 seconds. `;)`
 
+
+### Symlink method
 First, all of the packages are added to a list of needed ones, this prevents recursion issues. Then,
 in an involved process, ```pkg``` calulates ```bwrap``` arguments. This process goes as follows.
 
- - First, We ```overlay``` the base system read-only with a tmpfs overtop so we can bind mount without
+<strike> - First, We ```overlay``` the base system read-only with a tmpfs overtop so we can bind mount without
 	changing the base system. e.g.
 ```
 	...
@@ -58,6 +65,7 @@ in an involved process, ```pkg``` calulates ```bwrap``` arguments. This process 
 	--tmp-overlay /
 	...
 ```
+</strike>
  - Then we bind mount the ```System```, ```Users```, and ```Volumes```.
 
  ```

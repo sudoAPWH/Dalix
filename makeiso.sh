@@ -112,7 +112,20 @@ sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 
 # Generate base package
 # ln -sfT mnt/System/Packages/base\*\*\*0.1.0 mnt/System/Packages/base*
-# mkdir -p 'mnt/System/Packages/base---0.1.0/chroot'
+mkdir -p mnt/System/Packages/base---0.1.0/chroot
+touch mnt/System/Packages/base---0.1.0/chroot/pkg-info
+cat >> mnt/System/Packages/base---0.1.0/chroot/pkg-info <<EOF
+InfoType = 1
+[Package]
+Name = "base"
+Version = "0.1.0"
+Arch = "amd64"
+Maintainer = "dalixOS Team"
+Description = '''
+The base package for dalixOS
+'''
+Dependencies = "$(cat Resources/basepkgs.txt)"
+EOF
 # sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base\*\*\*0.1.0/chroot/
 
 # sudo arch-chroot mnt <<EOF
