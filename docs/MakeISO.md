@@ -15,4 +15,5 @@ Sequence:
  - Prepare ```base``` package with all packages in the base system
 	- Find all packages to be installed
 	- Install them
+	- Prepare ```base``` package to include it in its' metadata
  - Remove all loop devices and mounts, and other cleanup.
