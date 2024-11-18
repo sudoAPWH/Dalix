@@ -708,7 +708,7 @@ def occurence_count(l: list) -> dict:
 	assert type(r) == dict
 	return r
 
-def generate_bwrap_args(deps: list, cmd: str, experimental=True) -> list:
+def generate_bwrap_args(deps: list, cmd: str, overlayfs=False) -> list:
 	"""
 	Generates a list of bubblewrap arguments for setting up the container environment.
 
