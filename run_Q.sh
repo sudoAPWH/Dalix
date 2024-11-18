@@ -2,7 +2,7 @@
 
 qemu-system-x86_64                                                \
 -enable-kvm                                                       \
--drive if=pflash,format=raw,unit=0,readonly,file=/usr/share/OVMF/OVMF_CODE.4m.fd \
+-drive if=pflash,format=raw,unit=0,readonly,file=/usr/share/ovmf/x64/OVMF_CODE.4m.fd \
 -drive if=pflash,format=raw,unit=1,file=OVMF_VARS.4m.fd           \
 -m 8G                                                             \
 -smp 4                                                            \
