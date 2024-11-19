@@ -109,6 +109,9 @@ class Package:
 	def __repr__(self):
 		return f"Pkg({self.name}, {self.version}, {self.path})"
 
+	def __hash__(self):
+		return hash(str(self.name + self.version + self.path))
+
 class Dependency:
 	def __init__(self, name: str, comparisons: list, versions: list):
 		self.name = name
@@ -463,6 +466,8 @@ class System:
 		assert type(output) == list
 		for out in output:
 			assert type(out) == Package
+
+		output = list(set(output)) # remove duplicates
 		return output
 
 	def mkdir(path: str):
@@ -797,7 +802,7 @@ def generate_bwrap_args(deps: list, cmd: str, overlayfs=True) -> list:
 					args.append(f"--symlink {src_path} {file.bwrap_loc}")
 	elif overlayfs: # Overlayfs Method
 		for dep in deps:
-			args.append(f"--overlay-src {dep.fullpath}")
+			args.append(f"--overlay-src {dep.path}")
 		args.append(f"--tmp-overlay /")
 	args.append(cmd)
 	return args

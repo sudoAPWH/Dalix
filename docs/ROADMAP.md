@@ -15,3 +15,5 @@
 		- [x] Make pkg be a .deb package
 	- [x] Change confusing function names like deps_info
 	- [ ] Post install scripts
+
+- [x] Base makeiso.sh script
