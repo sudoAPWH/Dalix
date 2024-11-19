@@ -709,7 +709,7 @@ def occurence_count(l: list) -> dict:
 	assert type(r) == dict
 	return r
 
-def generate_bwrap_args(deps: list, cmd: str, overlayfs=False) -> list:
+def generate_bwrap_args(deps: list, cmd: str, overlayfs=True) -> list:
 	"""
 	Generates a list of bubblewrap arguments for setting up the container environment.
 
@@ -727,6 +727,7 @@ def generate_bwrap_args(deps: list, cmd: str, overlayfs=False) -> list:
 	assert type(cmd) == str
 	global root
 	args = []
+	args.append(f"--new-session")
 	# args.append(f"--overlay-src {os.path.join(root, "System/Packages/base---0.1.0/chroot")}")
 	# args.append(f"--tmp-overlay /")
 	args.append(f"--bind {root}/System /System")
@@ -744,56 +745,60 @@ def generate_bwrap_args(deps: list, cmd: str, overlayfs=False) -> list:
 
 	# item_t = namedtuple('item_t', ['bwrap_loc', 'fullpath', 'pkg', "occurences"])
 
-	# Get list of files and directories from list of dependencies
-	files, directories = System.get_files_and_directories_from_pkgs(deps)
+	if not overlayfs: # Symlink Method
+		# Get list of files and directories from list of dependencies
+		files, directories = System.get_files_and_directories_from_pkgs(deps)
 
-	# We need to follow the rules defined in Pkgs.md
+		# We need to follow the rules defined in Pkgs.md
 
-	# for each directory...
-	# if occurence count = 1, symlink
-	# if occurence count > 1, create directory
-	symlinked = []
-	for dir in directories:
-		if dir.pkg.name == "base": continue
-		if dir.occurences == None:
-			log(dir, ERROR)
-			continue
-		if dir.occurences == 1:
-			# Everything is mounted within / so we don't have to worry about root inside the
-			# container. But outside of the container we do. therfore, src_path must be to
-			# inside /System/Packages not {root}/System/Package.
-			for sym in symlinked:
-				if dir.bwrap_loc.startswith(sym):
-					break
-			else:
-				src_path = dir.fullpath[len(root):]
-				if src_path.lstrip().rstrip() == "":
-					log(src_path, ERROR)
-				if dir.bwrap_loc.lstrip().rstrip() == "":
-					log(dir.bwrap_loc, ERROR)
-				args.append(f"--symlink {src_path} {dir.bwrap_loc}")
-				symlinked.append(dir.bwrap_loc)
-		elif dir.occurences > 1:
-			pass
-			# args.append(f"--dir {dir.bwrap_loc}")
+		# for each directory...
+		# if occurence count = 1, symlink
+		# if occurence count > 1, create directory
+		symlinked = []
+		for dir in directories:
+			if dir.pkg.name == "base": continue
+			if dir.occurences == None:
+				log(dir, ERROR)
+				continue
+			if dir.occurences == 1:
+				# Everything is mounted within / so we don't have to worry about root inside the
+				# container. But outside of the container we do. therfore, src_path must be to
+				# inside /System/Packages not {root}/System/Package.
+				for sym in symlinked:
+					if dir.bwrap_loc.startswith(sym):
+						break
+				else:
+					src_path = dir.fullpath[len(root):]
+					if src_path.lstrip().rstrip() == "":
+						log(src_path, ERROR)
+					if dir.bwrap_loc.lstrip().rstrip() == "":
+						log(dir.bwrap_loc, ERROR)
+					args.append(f"--symlink {src_path} {dir.bwrap_loc}")
+					symlinked.append(dir.bwrap_loc)
+			elif dir.occurences > 1:
+				pass
+				# args.append(f"--dir {dir.bwrap_loc}")
 
-	# for each file...
-	# if occurence count = 1, symlink
-	# if occurence count > 1, only the file closest to the main package will be symlinked
+		# for each file...
+		# if occurence count = 1, symlink
+		# if occurence count > 1, only the file closest to the main package will be symlinked
 
-	for file in files:
-		if file.pkg.name == "base": continue
-		if True: # file.occurences == 1:
-			# Everything is mounted within / so we don't have to worry about root inside the
-			# container. But outside of the container we do. therfore, src_path must be to
-			# inside /System/Packages not {root}/System/Package.
-			for sym in symlinked:
-				if file.bwrap_loc.startswith(sym):
-					break
-			else:
-				src_path = file.fullpath[len(root):]
-				args.append(f"--symlink {src_path} {file.bwrap_loc}")
-
+		for file in files:
+			if file.pkg.name == "base": continue
+			if True: # file.occurences == 1:
+				# Everything is mounted within / so we don't have to worry about root inside the
+				# container. But outside of the container we do. therfore, src_path must be to
+				# inside /System/Packages not {root}/System/Package.
+				for sym in symlinked:
+					if file.bwrap_loc.startswith(sym):
+						break
+				else:
+					src_path = file.fullpath[len(root):]
+					args.append(f"--symlink {src_path} {file.bwrap_loc}")
+	elif overlayfs: # Overlayfs Method
+		for dep in deps:
+			args.append(f"--overlay-src {dep.fullpath}")
+		args.append(f"--tmp-overlay /")
 	args.append(cmd)
 	return args
 

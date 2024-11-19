@@ -103,6 +103,25 @@ in an involved process, ```pkg``` calulates ```bwrap``` arguments. This process 
 > Potentially, if the cost of preforming the symlinks for every package/application gets to high, a
 > static solution may have to be implemented. For now it will be done for each package/application.
 
+### OverlayFS Method
+
+The overlayfs method involves overlaying all of the packages overtop of one another. It will be a large amount of
+packages but there are potential optimizations. The general procedure is as follows.
+ - First, we calculate all of the directories that need to be overlayed. For example.
+
+```
+/System/Packages/liba---1.2.3/chroot
+/System/Packages/libqt---4.5.6/chroot
+...
+```
+ - Then we overlay them together with a tmpfs over the top. For example.
+
+```
+--overlay-src /System/Packages/liba---1.2.3/chroot
+--overlay-src /System/Packages/libqt---4.5.6/chroot
+--tmp-overlay /
+```
+
 Also, there is a special package in the system called ```base```, it is not the system but rather
 a special package that is pulled in by all the others, it is nothing more then a pkg-info. An
 application with sufficient priveleges, can add itself/another package to
