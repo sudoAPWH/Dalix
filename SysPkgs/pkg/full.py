@@ -767,6 +767,10 @@ def generate_bwrap_args(deps: list, cmd: str, overlayfs=False) -> list:
 					break
 			else:
 				src_path = dir.fullpath[len(root):]
+				if src_path.lstrip().rstrip() == "":
+					log(src_path, ERROR)
+				if dir.bwrap_loc.lstrip().rstrip() == "":
+					log(dir.bwrap_loc, ERROR)
 				args.append(f"--symlink {src_path} {dir.bwrap_loc}")
 				symlinked.append(dir.bwrap_loc)
 		elif dir.occurences > 1:
