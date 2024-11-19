@@ -562,7 +562,7 @@ class DebianUtils:
 			# create symlinks
 			chroot = inst_dir + "/chroot"
 			if make_symlinks:
-			    pass # Deprecated behaviour
+				pass # Deprecated behaviour
 			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
 			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
 			# System.symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
