@@ -113,8 +113,8 @@ sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 # Generate base package
 # ln -sfT mnt/System/Packages/base\*\*\*0.1.0 mnt/System/Packages/base*
 mkdir -p mnt/System/Packages/base---0.1.0/chroot
-touch mnt/System/Packages/base---0.1.0/chroot/pkg-info
-cat >> mnt/System/Packages/base---0.1.0/chroot/pkg-info <<EOF
+touch mnt/System/Packages/base---0.1.0/pkg-info
+cat >> mnt/System/Packages/base---0.1.0/pkg-info <<EOF
 InfoType = 1
 [Package]
 Name = "base"

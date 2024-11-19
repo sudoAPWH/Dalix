@@ -169,7 +169,7 @@ class Dependency:
 				versions.append(version)
 			return Dependency(name, comparisons, versions)
 		else:
-			return Dependency(dep, None, None)
+			return Dependency(dep.lstrip().rstrip(), None, None)
 
 	def parse_deps(deps: list) -> list:
 		"""
@@ -562,13 +562,14 @@ class DebianUtils:
 			# create symlinks
 			chroot = inst_dir + "/chroot"
 			if make_symlinks:
+			    pass # Deprecated behaviour
 			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
 			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
 			# System.symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
-				System.symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
-				System.symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
+			# System.symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
+			# System.symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
 			# System.symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
-				System.symlink(f"{chroot}/usr/var", f"{chroot}/var")
+			# System.symlink(f"{chroot}/usr/var", f"{chroot}/var")
 
 			# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/chroot")
 			copytree(
