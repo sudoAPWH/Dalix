@@ -14,3 +14,4 @@ mnt/*
 base
 base/*
 OVMF*
+SysPkgs/pkg/target
