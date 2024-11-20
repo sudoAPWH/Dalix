@@ -47,10 +47,10 @@ etc.
 
 ## When (a) package(s) are/is pulled in by an app.
 There is two ways we can handle it. One way is the symlink method which is more predictable but doesn't
-scale well and also doesn't handle file, and then there is the overlayfs method which will be more
-resource intensive while running, but would be simpler. In this document we detail both. The current
-implementation uses the symlink method, but we are working to migrate that for simplicity. Both are
-valid ways of implementation, however.
+scale well., and then there is the overlayfs method which will be more resource intensive while running,
+but would be simpler. In this document we detail both. The current implementation uses the symlink
+method, but we are working to migrate that for simplicity. Both are valid methods of implementation,
+however.
 
 
 ### Symlink method
@@ -112,19 +112,27 @@ packages but there are potential optimizations. The general procedure is as foll
 ```
 /System/Packages/liba---1.2.3/root
 /System/Packages/libqt---4.5.6/root
+/System/Packages/qt-tools---4.5.6/root
 ...
 ```
+ - We also need to add the base package to that list
+```
+/System/Packages/base---0.1.0/root
+```
+
  - Then we overlay them together with a tmpfs over the top. For example.
 
 ```
 --overlay-src /System/Packages/liba---1.2.3/root
 --overlay-src /System/Packages/libqt---4.5.6/root
+--overlay-src /System/Packages/qt-tools---4.5.6/root
+--overlay-src /System/Packages/base---0.1.0/root
 --tmp-overlay /
 ```
 
 Also, there is a special package in the system called ```base```, it is not the system but rather
-a special package that is pulled in by all the others, it is nothing more then a pkg-info. An
-application with sufficient priveleges, can add itself/another package to
+a special package that is pulled in by all the others, it is nothing more then a pkg-info and (optionaly)
+a debian rootfs. An application with sufficient priveleges, can add itself/another package to
 ```base```'s dependencies, to get automatically pulled in. For instance, an application installing a
 font, would create a package for the font, and add it into ```base```'s deps.
 
