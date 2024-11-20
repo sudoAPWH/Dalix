@@ -1,3 +1,5 @@
+use log::{error, warn, info, debug, trace};
+
 fn main() {
-    println!("Hello, world!");
+	colog::init();
 }
