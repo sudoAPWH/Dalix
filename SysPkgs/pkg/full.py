@@ -890,7 +890,7 @@ if __name__ == "__main__":
 		a = ""
 		for arg in args.args:
 			a += arg + " "
-		DebianUtils.install_pkg_from_online(a, make_symlinks=not args.no_symlinks, fetch_deps= not args.no_deps)
+		DebianUtils.install_pkg_from_online(a, make_symlinks=not args.no_symlinks, fetch_deps=not args.no_deps)
 	elif args.command == "test":
 		bargs = generate_bwrap_args([
 			"neovim",
