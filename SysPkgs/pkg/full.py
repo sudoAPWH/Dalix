@@ -438,9 +438,10 @@ class System:
 		output = []
 
 		if pkg in ignore_list:
-			return []
+			pass # return []
 		# Package
-		output.append(pkg)
+		else:
+			output.append(pkg)
 
 		for child in pkg.get_deps(): # Packages
 			if child not in ignore_list:

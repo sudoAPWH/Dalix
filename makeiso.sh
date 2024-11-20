@@ -79,7 +79,7 @@ sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
 sudo arch-chroot mnt <<EOF
 ls root
 apt install -y /root/dalixos-base.deb
-pkg install --no-deps $(cat Resources/basepkgs.txt)
+# pkg install --no-deps $(cat Resources/basepkgs.txt)
 
 
 # ln -sfT / /System/Packages/base/root
@@ -124,9 +124,9 @@ Maintainer = "dalixOS Team"
 Description = '''
 The base package for dalixOS
 '''
-Dependencies = "$(cat Resources/basepkgs.txt)"
+Dependencies = ""
 EOF
-# sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base\*\*\*0.1.0/root/
+sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base---0.1.0/root/
 
 # sudo arch-chroot mnt <<EOF
 # chown -R user:user '/System/Packages/base---0.1.0/root'
