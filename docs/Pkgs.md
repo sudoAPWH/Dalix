@@ -5,7 +5,7 @@ For an example package of libsqsh
 ```
 /System/Packages/libsqsh---.1.2.3/
 ├── pkg-info
-└── chroot
+└── root
 	├── usr
 	│	└── ...
 	└── ... (basically an app installed to a chroot)
@@ -94,10 +94,10 @@ in an involved process, ```pkg``` calulates ```bwrap``` arguments. This process 
 	--mkdir usr
 	--mkdir usr/bin
 	--mkdir usr/share
-	--symlink /System/Packages/bubblewrap0.11.0/chroot/usr/bin/bwrap /usr/bin/bwrap
-	--symlink /System/Packages/bash5.6.7/chroot/usr/bin/bash /usr/bin/bash
-	--symlink /System/Packages/bubblewrap0.11.0/chroot/usr/share/bubblewrap /usr/share/bubblewrap
-	--symlink /System/Packages/bash5.6.7/chroot/usr/share/bash /usr/share/bash
+	--symlink /System/Packages/bubblewrap0.11.0/root/usr/bin/bwrap /usr/bin/bwrap
+	--symlink /System/Packages/bash5.6.7/root/usr/bin/bash /usr/bin/bash
+	--symlink /System/Packages/bubblewrap0.11.0/root/usr/share/bubblewrap /usr/share/bubblewrap
+	--symlink /System/Packages/bash5.6.7/root/usr/share/bash /usr/share/bash
 ```
 
 > Potentially, if the cost of preforming the symlinks for every package/application gets to high, a
@@ -110,15 +110,15 @@ packages but there are potential optimizations. The general procedure is as foll
  - First, we calculate all of the directories that need to be overlayed. For example.
 
 ```
-/System/Packages/liba---1.2.3/chroot
-/System/Packages/libqt---4.5.6/chroot
+/System/Packages/liba---1.2.3/root
+/System/Packages/libqt---4.5.6/root
 ...
 ```
  - Then we overlay them together with a tmpfs over the top. For example.
 
 ```
---overlay-src /System/Packages/liba---1.2.3/chroot
---overlay-src /System/Packages/libqt---4.5.6/chroot
+--overlay-src /System/Packages/liba---1.2.3/root
+--overlay-src /System/Packages/libqt---4.5.6/root
 --tmp-overlay /
 ```
 
@@ -131,7 +131,7 @@ font, would create a package for the font, and add it into ```base```'s deps.
 ```
 base
 ├── pkg-info
-└── chroot
+└── root
 ```
 
 The base system is also added to base's dependencies. More info in [MakeISO](MakeISO.md)

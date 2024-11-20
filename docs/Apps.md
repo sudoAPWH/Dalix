@@ -5,9 +5,9 @@ For an example package of LibreOffice
 ```
 /Applications/LibreOffice.app/
 ├── info
-├── AppRun -> chroot/usr/bin/...
+├── AppRun -> root/usr/bin/...
 ├── icon.png
-└── chroot
+└── root
 	├── usr
 	│	└── ...
 	└── ... (basically a pkg installed to a chroot)

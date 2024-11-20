@@ -382,7 +382,7 @@ class System:
 		files = []
 		for dep in deps:
 			# for each Package...
-			dep_root = os.path.join(dep.path, "chroot")
+			dep_root = os.path.join(dep.path, "root")
 			dep_contents = System.list_directory_tree(dep_root)
 			for dep_item in dep_contents:
 				if os.path.isdir(dep_item):
@@ -565,21 +565,21 @@ class DebianUtils:
 			System.mkdir(inst_dir)
 
 			# create symlinks
-			chroot = inst_dir + "/chroot"
+			root = inst_dir + "/root"
 			if make_symlinks:
 				pass # Deprecated behaviour
-			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/bin")
-			# System.symlink(f"{chroot}/usr/bin", f"{chroot}/usr/local/bin")
-			# System.symlink(f"{chroot}/usr/sbin", f"{chroot}/sbin")
-			# System.symlink(f"{chroot}/usr/lib", f"{chroot}/lib")
-			# System.symlink(f"{chroot}/usr/lib64", f"{chroot}/lib64")
-			# System.symlink(f"{chroot}/usr/etc", f"{chroot}/etc")
-			# System.symlink(f"{chroot}/usr/var", f"{chroot}/var")
+			# System.symlink(f"{root}/usr/bin", f"{root}/bin")
+			# System.symlink(f"{root}/usr/bin", f"{root}/usr/local/bin")
+			# System.symlink(f"{root}/usr/sbin", f"{root}/sbin")
+			# System.symlink(f"{root}/usr/lib", f"{root}/lib")
+			# System.symlink(f"{root}/usr/lib64", f"{root}/lib64")
+			# System.symlink(f"{root}/usr/etc", f"{root}/etc")
+			# System.symlink(f"{root}/usr/var", f"{root}/var")
 
-			# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/chroot")
+			# os.system(f"cp -Ra {tmpdir}/. {inst_dir}/root")
 			copytree(
 				tmpdir,
-				f"{inst_dir}/chroot",
+				f"{inst_dir}/root",
 				symlinks=True,
 				dirs_exist_ok=True
 			)
@@ -733,7 +733,7 @@ def generate_bwrap_args(deps: list, cmd: str, overlayfs=True) -> list:
 	global root
 	args = []
 	args.append(f"--new-session")
-	# args.append(f"--overlay-src {os.path.join(root, "System/Packages/base---0.1.0/chroot")}")
+	# args.append(f"--overlay-src {os.path.join(root, "System/Packages/base---0.1.0/root")}")
 	# args.append(f"--tmp-overlay /")
 	args.append(f"--bind {root}/System /System")
 	args.append(f"--bind {root}/Users /Users")

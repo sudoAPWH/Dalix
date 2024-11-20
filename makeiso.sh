@@ -82,7 +82,7 @@ apt install -y /root/dalixos-base.deb
 pkg install --no-deps $(cat Resources/basepkgs.txt)
 
 
-# ln -sfT / /System/Packages/base/chroot
+# ln -sfT / /System/Packages/base/root
 
 
 /sbin/adduser --home /Users/user user <<EOD
@@ -112,7 +112,7 @@ sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 
 # Generate base package
 # ln -sfT mnt/System/Packages/base\*\*\*0.1.0 mnt/System/Packages/base*
-mkdir -p mnt/System/Packages/base---0.1.0/chroot
+mkdir -p mnt/System/Packages/base---0.1.0/root
 touch mnt/System/Packages/base---0.1.0/pkg-info
 cat >> mnt/System/Packages/base---0.1.0/pkg-info <<EOF
 InfoType = 1
@@ -126,10 +126,10 @@ The base package for dalixOS
 '''
 Dependencies = "$(cat Resources/basepkgs.txt)"
 EOF
-# sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base\*\*\*0.1.0/chroot/
+# sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base\*\*\*0.1.0/root/
 
 # sudo arch-chroot mnt <<EOF
-# chown -R user:user '/System/Packages/base---0.1.0/chroot'
+# chown -R user:user '/System/Packages/base---0.1.0/root'
 # EOF
 
 unset nounset

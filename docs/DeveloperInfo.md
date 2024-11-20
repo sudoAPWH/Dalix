@@ -32,7 +32,7 @@
 ## When a user drags a ```.deb``` File into ```/Applications```
 
 ```dalixd``` will recognize it and extract the deb into ```tmp/*``` where ```*``` is the name and
-version of the package. It will then simulate installation into a chroot. ```tmp/*/chroot``` Then it
+version of the package. It will then simulate installation into a root. ```tmp/*/root``` Then it
 will read the dependencies of the application, and place that in its own meta-data file alongside
 other important information. It then copies ```tmp/*``` into ```/Applications/*.app``` Each of these
 steps will get described in more detail
