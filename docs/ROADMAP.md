@@ -1,19 +1,12 @@
-- [x] implement pkg
-	- [x] install debian package to chroot
-	- [x] get meta-data
-	- [x] search packages
-	- [x] generate occurence count of each folder
-	- [x] migrate to using classes for both Dependency and Package
-		- [x] Package
-		- [x] Dependency
-	- [x] launch bwrap with correct options
-		- [x] Mount base system readonly
-		- [x] Symlink required packages
-	- [x] Fetch dependencies from debian's servers
-	- [x] Clean up code a bit
-	- [x] Clean up build process
-		- [x] Make pkg be a .deb package
-	- [x] Change confusing function names like deps_info
+- [ ] implement pkg
+	- [ ] install debian package to chroot
+	- [ ] get meta-data
+	- [ ] search packages
+	- [ ] generate occurence count of each folder
+	- [ ] launch bwrap with correct options
+		- [ ] Mount base system readonly
+		- [ ] Overlay required packages
+	- [ ] Fetch dependencies from debian's servers
 	- [ ] Post install scripts
 
 - [x] Base makeiso.sh script
