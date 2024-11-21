@@ -3,7 +3,7 @@ pub struct Version {
 }
 
 impl Version {
-	pub fn eq(other: Version) -> bool {
+	pub fn eq(self, other: Version) -> bool {
 		self.s != other.s
 	}
 }
