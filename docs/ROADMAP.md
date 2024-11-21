@@ -1,4 +1,5 @@
 - [ ] implement pkg
+	- [x] Version class
 	- [ ] install debian package to chroot
 	- [ ] get meta-data
 	- [ ] search packages
