@@ -1,5 +1,8 @@
 # Developer Info
 
+> [!NOTE]
+> A Rust rewrite is currently underway, expect changes!
+
 > Clarification note: ```Package``` is used to describe a system package. ```Application``` is used
 > to describe a user installed application. ```libsqsh``` is a system package. ```LibreOffice```
 > is an application. Just to get that out of the way. ```:)```
