@@ -27,7 +27,7 @@ DepsIncluded = false
 [Package]
 
 Name = "Your Package Name"
-Version = "4.5.6.7"
+Version = "4.5.6"
 Arch = "Arch in the same format as debians e.g. amd64 arm64 etc."
 Maintainer = "You/Your company's name"
 Description = '''
@@ -47,14 +47,14 @@ etc.
 
 # For use in automated scripts so there only has to be one meta-data file
 [Other]
+source = "deb"
+manually_installed = true
 ```
 
 ## When (a) package(s) are/is pulled in by an app.
-There is two ways we can handle it. One way is the symlink method which is more predictable but doesn't
-scale well., and then there is the overlayfs method which will be more resource intensive while running,
-but would be simpler. In this document we detail both. The current implementation uses the symlink
-method, but we are working to migrate that for simplicity. Both are valid methods of implementation,
-however.
+Their are two methods for starting this container, the symlink method and the overlayfs method.
+The current implementation is currently working on implementing the overlayfs method due to its'
+simplicity and security, but potentially in the future the symlink method may be implemented.
 
 
 ### Symlink method
