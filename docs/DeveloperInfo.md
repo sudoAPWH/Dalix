@@ -1,7 +1,7 @@
 # Developer Info
 
-> [!NOTE]
-> A Rust rewrite is currently underway, expect changes!
+> [!WARNING]
+> A Rust rewrite is currently underway due to technical debt, expect changes!
 
 > Clarification note: ```Package``` is used to describe a system package. ```Application``` is used
 > to describe a user installed application. ```libsqsh``` is a system package. ```LibreOffice```
