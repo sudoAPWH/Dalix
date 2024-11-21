@@ -1,9 +1,13 @@
 # Packages
 
+## Sources
+
+We will be using ```apt```'s ```sources.list``` file to get dependencies.
+
 ## Pkg Bundle Structure
 For an example package of libsqsh
 ```
-/System/Packages/libsqsh---.1.2.3/
+/System/Packages/libsqsh---1.2.3/
 ├── pkg-info
 └── root
 	├── usr
