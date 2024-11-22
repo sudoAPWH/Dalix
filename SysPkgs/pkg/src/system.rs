@@ -29,5 +29,14 @@ pub fn cmd_out(s: &str) -> Output {
 }
 
 pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> bool {
+	mkdir(to);
 	cmd(&format!("cp -r {}/* {}", from.display(), to.display()))
+}
+
+pub fn mkdir(path: &PathBuf) -> bool {
+	cmd(&format!("mkdir -p {}", path.display()))
+}
+
+pub fn touch(path: &PathBuf) -> bool {
+	cmd(&format!("touch {}", path.display()))
 }

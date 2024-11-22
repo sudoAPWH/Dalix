@@ -142,23 +142,28 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
 }
 
 /// Installs a DebFile into the path specified by root
-pub fn install_deb_pkg(d: &DebFile, root: &Path) {
+pub fn install_deb_pkg(d: &DebFile, root: &Path) -> bool{
 	let info = extract_info(d);
-	let pkg_dir = root.join(format!("/System/Packages/{}---{}", info.name, info.version.s));
+	let pkg_dir = root.join(format!("System/Packages/{}---{}", info.name, info.version.s));
 	{
 		let dir = TempDir::new().unwrap();
 		extract_deb(&d, dir.path());
-		system::copy_recursive(
+		if system::copy_recursive(
 			&dir.path().to_path_buf(),
 			&pkg_dir
-		);
+		) {
+			info!("Extracted {} to {}", info.name, pkg_dir.display());
+		} else {
+			panic!("Failed to extract {} to {}", info.name, pkg_dir.display());
+		}
 	} // TempDir gets dropped here
 	// pkg_dir is stil valid though
-	info!("Extracted {} to {}", info.name, pkg_dir.display());
+
 
 	let pkg_info_path = pkg_dir.join("pkg-info");
-	let info: String = format!(r"
-InfoType = 1
+	let info: String = format!(
+r"InfoType = 1
+DepsIncluded = false
 
 [Package]
 Name = '{}'
@@ -177,6 +182,9 @@ source = 'deb'",
 	info.maintainer,
 	info.description);
 	info!("Pkg info:\n{}", info);
+	system::touch(&pkg_info_path);
 	fs::write(&pkg_info_path, info).unwrap();
 	info!("Wrote pkg-info to {}", &pkg_info_path.display());
+
+	true
 }

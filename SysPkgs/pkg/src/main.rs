@@ -35,6 +35,8 @@ fn main() {
     let arg = args.arg;
 
     info!("Command given: {}\nExcellent choice!", command);
+	info!("With root directory: {}", args.root);
+	info!("With argument: {}", arg);
 
     if args.output_only {
         info!("You have requested for output-only mode...");
@@ -50,6 +52,11 @@ fn main() {
             Path::new(&format!("{}-dir", arg)));
     } else if command == "xi" {
         debian_utils::extract_info(&DebFile::new(&arg));
-    }
+    } else if command == "install-deb" {
+		debian_utils::install_deb_pkg(
+			&DebFile::new(&arg),
+			Path::new(&args.root)
+		);
+	}
 
 }
