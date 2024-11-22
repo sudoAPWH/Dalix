@@ -2,6 +2,8 @@ use std::path::Path;
 use crate::system;
 use std::process::ExitStatus;
 use temp_dir::TempDir;
+use std::fs::File;
+use log::{error, warn, info, debug};
 
 pub struct DebPkg {
     name: String,
@@ -69,12 +71,14 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
 pub fn extract_info(deb: &DebFile) {
     let dir = TempDir::new().unwrap();
     extract_deb_full(deb, dir.path());
-    let mut control_file = std::fs::File::open(
+    let mut control_file = File::open(
             dir.path()
             .join("DEBIAN")
             .join("control")
         ).unwrap();
     let mut control_string = String::new();
     std::io::Read::read_to_string(&mut control_file, &mut control_string).unwrap();
-
+    for line in control_string.lines() {
+        info!("Control file: {}", line);
+    }
 }

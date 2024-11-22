@@ -48,6 +48,8 @@ fn main() {
         debian_utils::extract_deb(
             &DebFile::new(&arg),
             Path::new(&format!("{}-dir", arg)));
+    } else if command == "xi" {
+        debian_utils::extract_info(&DebFile::new(&arg));
     }
 
 }
