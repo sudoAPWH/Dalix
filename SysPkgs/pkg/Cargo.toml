@@ -9,3 +9,4 @@ colog = "*"
 rust-apt = "*"
 temp-dir = "*"
 clap = { version = "*", features = ["derive"] }
+debian-packaging = "0.18.0"
