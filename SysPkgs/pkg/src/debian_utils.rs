@@ -68,6 +68,15 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
 }
 
 /// Gets a DebPkg struct from a deb file
+/// 
+/// Generates a DebPkg struct based off of information in the debian control file.
+/// Also imbeds the path field.
+/// 
+/// # Arguments
+/// - `deb` The `DebFile` for which will will generate the DebPkg struct for.
+///
+/// # Returns
+/// - `DebPkg` A struct containing info about the package.
 pub fn extract_info(deb: DebFile) -> DebPkg {
     let dir = TempDir::new().unwrap();
     extract_deb_full(&deb, dir.path());
@@ -110,16 +119,16 @@ pub fn extract_info(deb: DebFile) -> DebPkg {
             line[12..].clone_into(&mut maintainer)
         } else if line.starts_with("Description: ") {
             block = "Description".to_string();
-            info!("{}", line);
             line[13..].clone_into(&mut description)
         } else if line.starts_with(" ") {
             if block != "".to_string() {
                 if block == "Description" {
-                    description.push_str(&format!("{}\n",line));
+                    description.push_str(&format!("{}\n",&line[1..]));
                 }
             }
         }
     }
+    info!("Description: {}", description);
     DebPkg {
         name,
         version,
