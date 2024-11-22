@@ -10,7 +10,7 @@ mod version;
 mod debian_utils;
 mod system;
 
-use debian_utils::{DebFile};
+use debian_utils::DebFile;
 
 #[derive(Parser)]
 struct Args {
@@ -49,7 +49,7 @@ fn main() {
             &DebFile::new(&arg),
             Path::new(&format!("{}-dir", arg)));
     } else if command == "xi" {
-        debian_utils::extract_info(&DebFile::new(&arg));
+        debian_utils::extract_info(DebFile::new(&arg));
     }
 
 }

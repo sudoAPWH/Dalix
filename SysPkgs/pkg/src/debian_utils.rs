@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::system;
 use std::process::ExitStatus;
 use temp_dir::TempDir;
@@ -12,7 +12,7 @@ pub struct DebPkg {
     deps: String,
     description: String,
     maintainer: String,
-    path: Path
+    path: PathBuf
 }
 
 pub struct DebFile<'a> {
@@ -68,9 +68,9 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
 }
 
 /// Gets a DebPkg struct from a deb file
-pub fn extract_info(deb: &DebFile) {
+pub fn extract_info(deb: DebFile) -> DebPkg {
     let dir = TempDir::new().unwrap();
-    extract_deb_full(deb, dir.path());
+    extract_deb_full(&deb, dir.path());
     let mut control_file = File::open(
             dir.path()
             .join("DEBIAN")
@@ -78,7 +78,55 @@ pub fn extract_info(deb: &DebFile) {
         ).unwrap();
     let mut control_string = String::new();
     std::io::Read::read_to_string(&mut control_file, &mut control_string).unwrap();
+
+    let mut name = String::new();
+    let mut version = String::new();
+    let mut arch = String::new();
+    let mut deps = String::new();
+    let mut description = String::new();
+    let mut maintainer = String::new();
+
+    let mut block: String = "".to_string();
     for line in control_string.lines() {
-        info!("Control file: {}", line);
+        if line.starts_with("Package: ") {
+            block = "".to_string();
+            info!("{}", line);
+            line[9..].clone_into(&mut name)
+        } else if line.starts_with("Version: ") {
+            block = "".to_string();
+            info!("{}", line);
+            line[9..].clone_into(&mut version)
+        } else if line.starts_with("Architecture: ") {
+            block = "".to_string();
+            info!("{}", line);
+            line[14..].clone_into(&mut arch)
+        } else if line.starts_with("Depends: ") {
+            block = "".to_string();
+            info!("{}", line);
+            line[9..].clone_into(&mut deps)
+        } else if line.starts_with("Maintainer: ") {
+            block = "".to_string();
+            info!("{}", line);
+            line[12..].clone_into(&mut maintainer)
+        } else if line.starts_with("Description: ") {
+            block = "Description".to_string();
+            info!("{}", line);
+            line[13..].clone_into(&mut description)
+        } else if line.starts_with(" ") {
+            if block != "".to_string() {
+                if block == "Description" {
+                    description.push_str(&format!("{}\n",line));
+                }
+            }
+        }
+    }
+    DebPkg {
+        name,
+        version,
+        arch,
+        deps,
+        description,
+        maintainer,
+        path: deb.path.to_path_buf()
     }
 }
