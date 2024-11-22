@@ -1,8 +1,14 @@
-use std::process::Command;
+use std::{path::PathBuf, process::Command};
+use crate::version::Version;
 
 pub struct Package {
 	pub name: String,
-	pub version: String
+	pub version: Version,
+	pub arch: String,
+	pub maintainer: String,
+	pub description: String,
+	pub deps: String,
+	pub path: PathBuf
 }
 
 pub fn cmd(s: &str) -> bool {
