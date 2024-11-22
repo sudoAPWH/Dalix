@@ -78,7 +78,7 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
 ///
 /// # Returns
 /// - `DebPkg` A struct containing info about the package.
-pub fn extract_info(deb: DebFile) -> DebPkg {
+pub fn extract_info(deb: &DebFile) -> DebPkg {
     let dir = TempDir::new().unwrap();
     extract_deb_full(&deb, dir.path());
     let mut control_file = File::open(
@@ -141,6 +141,7 @@ pub fn extract_info(deb: DebFile) -> DebPkg {
     }
 }
 
-
-pub fn install_deb_pkg(d: &DebFile) {
+/// Installs a DebFile into the path specified by root
+pub fn install_deb_pkg(d: &DebFile, root: &Path) {
+	let info = extract_info(d);
 }
