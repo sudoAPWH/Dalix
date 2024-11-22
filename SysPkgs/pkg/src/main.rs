@@ -6,7 +6,6 @@ use log::{error, warn, info, debug};
 use clap::Parser;
 use std::path::Path;
 
-mod version;
 mod debian_utils;
 mod system;
 

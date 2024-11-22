@@ -4,11 +4,11 @@ use std::process::ExitStatus;
 use temp_dir::TempDir;
 use std::fs::File;
 use log::{error, warn, info, debug};
-use crate::version::Version;
+use debian_packaging::package_version::PackageVersion;
 
 pub struct DebPkg {
     name: String,
-    version: Version,
+    version: PackageVersion,
     arch: String,
     deps: String,
     description: String,
@@ -132,7 +132,7 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
     info!("Description: {}", description);
     DebPkg {
         name,
-        version: Version::new(version),
+        version: PackageVersion::parse(&version).unwrap(),
         arch,
         deps,
         description,
@@ -144,7 +144,7 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
 /// Installs a DebFile into the path specified by root
 pub fn install_deb_pkg(d: &DebFile, root: &Path) -> bool{
 	let info = extract_info(d);
-	let pkg_dir = root.join(format!("System/Packages/{}---{}", info.name, info.version.s));
+	let pkg_dir = root.join(format!("System/Packages/{}---{}", info.name, info.version.to_string()));
 	{
 		let dir = TempDir::new().unwrap();
 		extract_deb(&d, dir.path());
@@ -176,7 +176,7 @@ Description = '''{}'''
 [Other]
 source = 'deb'",
 	info.name,
-	info.version.s,
+	info.version.to_string(),
 	info.arch,
 	info.deps,
 	info.maintainer,

@@ -1,9 +1,9 @@
 use std::{path::PathBuf, process::{Command, Output}};
-use crate::version::Version;
+use debian_packaging::package_version::PackageVersion;
 
 pub struct Package {
 	pub name: String,
-	pub version: Version,
+	pub version: PackageVersion,
 	pub arch: String,
 	pub maintainer: String,
 	pub description: String,
