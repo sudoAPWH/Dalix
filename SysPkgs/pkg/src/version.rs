@@ -19,23 +19,23 @@ impl PartialEq for Version {
 #[allow(dead_code)]
 impl Version {
     pub fn new(s: String) -> Version {
-        Version { s }
+        Version { s: s.trim().to_string() }
     }
 
     pub fn gt(&self, other: &Version) -> bool {
-        util::cmp_versions(self.s.as_str(), other.s.as_str()) == Ordering::Less
-    }
-
-    pub fn ge(&self, other: &Version) -> bool {
-        util::cmp_versions(self.s.as_str(), other.s.as_str()) != Ordering::Greater
-    }
-
-    pub fn lt(&self, other: &Version) -> bool {
         util::cmp_versions(self.s.as_str(), other.s.as_str()) == Ordering::Greater
     }
 
-    pub fn le(&self, other: &Version) -> bool {
+    pub fn ge(&self, other: &Version) -> bool {
         util::cmp_versions(self.s.as_str(), other.s.as_str()) != Ordering::Less
+    }
+
+    pub fn lt(&self, other: &Version) -> bool {
+        util::cmp_versions(self.s.as_str(), other.s.as_str()) == Ordering::Less
+    }
+
+    pub fn le(&self, other: &Version) -> bool {
+        util::cmp_versions(self.s.as_str(), other.s.as_str()) != Ordering::Greater
     }
 }
 
@@ -67,6 +67,7 @@ mod tests {
         let v = Version::new("5.4.4".to_string());
         assert!(v.gt(&Version::new("5.4.3".to_string())));
         assert!(!v.gt(&Version::new("5.4.4".to_string())));
+		assert!(!v.gt(&Version::new("5.4.5".to_string())));
     }
 
     #[test]
