@@ -8,3 +8,4 @@ log = "*"
 colog = "*"
 rust-apt = "*"
 temp-dir = "*"
+clap = { version = "*", features = ["derive"] }
