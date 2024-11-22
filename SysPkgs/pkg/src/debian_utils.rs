@@ -62,7 +62,7 @@ pub fn extract_deb_full(d: &DebFile, out: &Path) -> bool {
 }
 
 pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
-	system::cmd(&format!("dpkg-deb -R {} {}", d.path.display(), out.display()))
+	system::cmd(&format!("dpkg-deb -x {} {}", d.path.display(), out.display()))
 }
 
 /// Gets a DebPkg struct from a deb file
