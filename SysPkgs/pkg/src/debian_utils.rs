@@ -177,5 +177,6 @@ source = 'deb'",
 	info.maintainer,
 	info.description);
 	info!("Pkg info:\n{}", info);
-	fs::write(pkg_info_path, info).unwrap();
+	fs::write(&pkg_info_path, info).unwrap();
+	info!("Wrote pkg-info to {}", &pkg_info_path.display());
 }
