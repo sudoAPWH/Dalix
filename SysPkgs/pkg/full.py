@@ -89,9 +89,9 @@ class Package:
 		:returns list(Packages):
 		"""
 		info = self.get_info()
-		if info["Package"]["Dependencies"].rstrip().lstrip() == "":
+		if info["Package"]["Depends"].rstrip().lstrip() == "":
 			return []
-		deps2 = info["Package"]["Dependencies"].split(",")
+		deps2 = info["Package"]["Depends"].split(",")
 		deps = []
 		for dep in deps2:
 			if len(dep.split("|")) != 1:
@@ -596,7 +596,7 @@ class DebianUtils:
 				)
 			pkg = Package(info["Package"]["Name"], Version(info["Package"]["Version"]), inst_dir)
 			# install dependencies from debians servers.
-			if "Dependencies" in info["Package"] and fetch_dependencies:
+			if "Depends" in info["Package"] and fetch_dependencies:
 				DebianUtils.install_deps_for_pkg_from_online(pkg)
 			return pkg
 
@@ -643,7 +643,7 @@ class DebianUtils:
 				log(f"Going to install {pkg}...")
 				try:
 					installed_pkg = DebianUtils.install_deb(f"{tmpdir}/{pkg}", fetch_dependencies=False, make_symlinks=make_symlinks)
-					deps = installed_pkg.get_info()["Package"]["Dependencies"]
+					deps = installed_pkg.get_info()["Package"]["Depends"]
 					if deps.rstrip().lstrip() == "":
 						continue
 					if fetch_deps:
@@ -661,9 +661,9 @@ class DebianUtils:
 		assert type(pkg) == Package
 		deps = []
 		info = pkg.get_info()
-		if not "Dependencies" in info["Package"]:
+		if not "Depends" in info["Package"]:
 			return
-		dep_string = info["Package"]["Dependencies"]
+		dep_string = info["Package"]["Depends"]
 		DebianUtils.install_deps_from_online(dep_string)
 
 	def deb_to_pkg_info(info: dict) -> dict:
@@ -684,15 +684,15 @@ class DebianUtils:
 		try:
 			pkg_info["Package"]["Name"] = info["Package"]
 			pkg_info["Package"]["Version"] = info["Version"]
-			pkg_info["Package"]["Arch"] = info["Architecture"]
+			pkg_info["Package"]["Architecture"] = info["Architecture"]
 			pkg_info["Package"]["Maintainer"] = info["Maintainer"]
 			pkg_info["Package"]["Description"] = info["Description"]
 			if "Depends" in info:
 				deps = info["Depends"]
 				# deps = deps.replace(",", "\n").replace("(", "").replace(")", "").replace(" ", "")
-				pkg_info["Package"]["Dependencies"] = deps
+				pkg_info["Package"]["Depends"] = deps
 			else:
-				pkg_info["Package"]["Dependencies"] = ""
+				pkg_info["Package"]["Depends"] = ""
 		except KeyError:
 			raise ValueError("Invalid debian control file in package!")
 		assert type(pkg_info) == dict

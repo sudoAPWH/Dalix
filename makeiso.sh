@@ -119,12 +119,12 @@ InfoType = 1
 [Package]
 Name = "base"
 Version = "0.1.0"
-Arch = "amd64"
+Architecture = "amd64"
 Maintainer = "dalixOS Team"
 Description = '''
 The base package for dalixOS
 '''
-Dependencies = ""
+Depends = ""
 EOF
 sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base---0.1.0/root/
 

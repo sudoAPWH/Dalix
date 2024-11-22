@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::{fs, path::{Path, PathBuf}};
 use crate::system;
 use std::process::ExitStatus;
 use temp_dir::TempDir;
@@ -144,4 +144,38 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
 /// Installs a DebFile into the path specified by root
 pub fn install_deb_pkg(d: &DebFile, root: &Path) {
 	let info = extract_info(d);
+	let pkg_dir = root.join(format!("/System/Packages/{}---{}", info.name, info.version.s));
+	{
+		let dir = TempDir::new().unwrap();
+		extract_deb(&d, dir.path());
+		system::copy_recursive(
+			&dir.path().to_path_buf(),
+			&pkg_dir
+		);
+	} // TempDir gets dropped here
+	// pkg_dir is stil valid though
+	info!("Extracted {} to {}", info.name, pkg_dir.display());
+
+	let pkg_info_path = pkg_dir.join("pkg-info");
+	let info: String = format!(r"
+InfoType = 1
+
+[Package]
+Name = '{}'
+Version = '{}'
+Architecture = '{}'
+Depends = '{}'
+Maintainer = '{}'
+Description = '''{}'''
+
+[Other]
+source = 'deb'",
+	info.name,
+	info.version.s,
+	info.arch,
+	info.deps,
+	info.maintainer,
+	info.description);
+	info!("Pkg info:\n{}", info);
+	fs::write(pkg_info_path, info).unwrap();
 }

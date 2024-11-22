@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Command};
+use std::{path::PathBuf, process::{Command, Output}};
 use crate::version::Version;
 
 pub struct Package {
@@ -18,4 +18,16 @@ pub fn cmd(s: &str) -> bool {
         .status()
         .expect(format!("Failed to run command {}", s).as_str())
         .success()
+}
+
+pub fn cmd_out(s: &str) -> Output {
+    Command::new("bash")
+        .arg("-c")
+        .arg(s)
+        .output()
+        .expect(format!("Failed to run command {}", s).as_str())
+}
+
+pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> bool {
+	cmd(&format!("cp -r {}/* {}", from.display(), to.display()))
 }

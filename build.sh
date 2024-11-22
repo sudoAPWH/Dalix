@@ -14,12 +14,12 @@ mkdir -p build/Applications
 # [Package]
 # Name = "base"
 # Version = "0.1.0"
-# Arch = "all"
+# Architecture = "all"
 # Maintainer = "dalixOS Team"
 # Description = '''
 # A package which is included for all packages
 # '''
-# Dependencies = ""
+# Depends = ""
 # EOF
 
 

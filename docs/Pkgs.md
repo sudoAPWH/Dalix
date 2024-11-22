@@ -28,7 +28,7 @@ DepsIncluded = false
 
 Name = "Your Package Name"
 Version = "4.5.6"
-Arch = "Arch in the same format as debians e.g. amd64 arm64 etc."
+Architecture = "Architecture in the same format as debians e.g. amd64 arm64 etc."
 Maintainer = "You/Your company's name"
 Description = '''
 The first line is the short description.
@@ -36,7 +36,7 @@ All the other lines are a description
 which can span multiple lines.
 '''
 
-Dependencies = '''
+Depends = '''
 libsqsh (>= 1.2.3),
 python (>= 3.10),
 joy,

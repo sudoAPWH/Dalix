@@ -26,8 +26,8 @@ InfoType = 1
 Name = "Your App Name"
 Version = "4.5.6.7"
 Maintainer = "You/Your company's name"
-# Arch can be any arch in the form of Debians arch field e.g. amd64 arm64 i386 etc.
-Arch = "any"
+# Architecture can be any arch in the form of Debians arch field e.g. amd64 arm64 i386 etc.
+Architecture = "any"
 Description = '''
 The first line is the short description.
 All the other lines are a description
