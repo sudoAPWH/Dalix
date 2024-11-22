@@ -4,10 +4,11 @@ use std::process::ExitStatus;
 use temp_dir::TempDir;
 use std::fs::File;
 use log::{error, warn, info, debug};
+use crate::version::Version;
 
 pub struct DebPkg {
     name: String,
-    version: String,
+    version: Version,
     arch: String,
     deps: String,
     description: String,
@@ -68,10 +69,10 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
 }
 
 /// Gets a DebPkg struct from a deb file
-/// 
+///
 /// Generates a DebPkg struct based off of information in the debian control file.
 /// Also imbeds the path field.
-/// 
+///
 /// # Arguments
 /// - `deb` The `DebFile` for which will will generate the DebPkg struct for.
 ///
@@ -131,11 +132,15 @@ pub fn extract_info(deb: DebFile) -> DebPkg {
     info!("Description: {}", description);
     DebPkg {
         name,
-        version,
+        version: Version::new(version),
         arch,
         deps,
         description,
         maintainer,
         path: deb.path.to_path_buf()
     }
+}
+
+
+pub fn install_deb_pkg(d: &DebFile) {
 }
