@@ -40,3 +40,7 @@ pub fn mkdir(path: &PathBuf) -> bool {
 pub fn touch(path: &PathBuf) -> bool {
 	cmd(&format!("touch {}", path.display()))
 }
+
+pub fn wget(url: &str, out: &PathBuf) -> bool {
+	cmd(&format!("wget {} -o {}", url, out.display()))
+}

@@ -8,6 +8,7 @@ use std::path::Path;
 
 mod debian_utils;
 mod system;
+mod dependencies;
 
 use debian_utils::DebFile;
 

@@ -188,3 +188,10 @@ source = 'deb'",
 
 	true
 }
+
+
+pub mod online {
+	pub fn update_package_lists() {
+
+	}
+}
