@@ -4,25 +4,25 @@ use std::process::ExitStatus;
 use temp_dir::TempDir;
 
 pub struct DebPkg {
-	name: String,
-	version: String,
-	arch: String,
-	deps: String,
-	description: String,
-	maintainer: String,
-	path: Path
+    name: String,
+    version: String,
+    arch: String,
+    deps: String,
+    description: String,
+    maintainer: String,
+    path: Path
 }
 
 pub struct DebFile<'a> {
-	path: &'a Path
+    path: &'a Path
 }
 
 impl DebFile<'_> {
-	pub fn new(path: &str) -> DebFile {
-		DebFile {
-			path: Path::new(path)
-		}
-	}
+    pub fn new(path: &str) -> DebFile {
+        DebFile {
+            path: Path::new(path)
+        }
+    }
 }
 
 /// Extracts the full contents of a .deb package to the specified directory.
@@ -58,15 +58,23 @@ impl DebFile<'_> {
 /// }
 /// ```
 pub fn extract_deb_full(d: &DebFile, out: &Path) -> bool {
-	system::cmd(&format!("dpkg-deb -R {} {}", d.path.display(), out.display()))
+    system::cmd(&format!("dpkg-deb -R {} {}", d.path.display(), out.display()))
 }
 
 pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
-	system::cmd(&format!("dpkg-deb -x {} {}", d.path.display(), out.display()))
+    system::cmd(&format!("dpkg-deb -x {} {}", d.path.display(), out.display()))
 }
 
 /// Gets a DebPkg struct from a deb file
 pub fn extract_info(deb: &DebFile) {
-	let dir = TempDir::new().unwrap();
-	extract_deb_full(deb, dir.path());
+    let dir = TempDir::new().unwrap();
+    extract_deb_full(deb, dir.path());
+    let mut control_file = std::fs::File::open(
+            dir.path()
+            .join("DEBIAN")
+            .join("control")
+        ).unwrap();
+    let mut control_string = String::new();
+    std::io::Read::read_to_string(&mut control_file, &mut control_string).unwrap();
+
 }
