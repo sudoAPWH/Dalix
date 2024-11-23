@@ -9,6 +9,7 @@ use std::path::Path;
 mod backend;
 mod system;
 mod dependencies;
+mod frontend;
 
 use backend::DebFile;
 
