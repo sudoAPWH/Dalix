@@ -58,6 +58,8 @@ fn main() {
 			&DebFile::new(&arg),
 			Path::new(&args.root)
 		).unwrap();
+	} else if command == "update" {
+		frontend::update_package_lists(Path::new(&args.root)).unwrap();
 	}
 
 }

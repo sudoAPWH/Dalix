@@ -65,7 +65,7 @@ pub fn cmd_out(s: &str) -> Result<Output, Error> {
 /// do not already exist, and then the `cp -r` command to copy the contents of the source directory to the destination
 /// directory. It returns a boolean indicating the success (`true`) or failure (`false`) of the operation.
 pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> Result<(), String> {
-	mkdir(to);
+	mkdir(to)?;
 	cmd(&format!("cp -r {}/* {}", from.display(), to.display()))
 }
 
