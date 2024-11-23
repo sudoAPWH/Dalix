@@ -2,7 +2,7 @@
 
 ## Sources
 
-We will be using ```apt```'s ```sources.list``` file to get dependencies. (For unaware users, ```apt``` stores this file in ```/etc/sources.list```)
+We will be using our own sources format detailed in [Developer Info](DeveloperInfo.md)
 
 ## Pkg Bundle Structure
 For an example package of libsqsh

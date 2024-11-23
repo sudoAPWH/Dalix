@@ -47,20 +47,16 @@ steps will get described in more detail
 > Desktop files exist. This functionality is planned to be implemented in the future. Sorry for the
 > inconvenience.**"
 
-### To recognize the .deb
-```dalixd``` will use ```watchdog``` to moniter  the directory and will display a message informing
-the user that the app will be converted so it can be used.
 
+## App and Package difference
 
-## Developer information
-
-Applications are not aware of each other, but packages are.
+Applications are not/should not be aware of each other, but packages are.
 
 [Applications](Apps.md)
 
 [Packages](Pkgs.md)
 
-### Base FS heiarchy.
+## Base FS heiarchy.
 
 ```
 /
@@ -69,7 +65,15 @@ Applications are not aware of each other, but packages are.
 ├── System
 │	├── Packages
 │	│	└── libsqsh---1.2.3
-│	└── Config
+│	├── Cache
+│	│	├── Packages2
+│	│	├── Packages1
+│	│	└── Packages0
+│	└── Config -> ../../etc
 └── Volumes
 	└── USB3.0
 ```
+
+In the `Cache` directory the file of `PackagesX` will be the Packages file of the `sid` distro for each
+url specified in `/etc/sources.list` file. Each seperate `PackagesX` file is for a different URL which
+is the first line in the file, in the format `url: https://ftp.ca.debian.org/debian/`
