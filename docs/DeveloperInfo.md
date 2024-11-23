@@ -80,5 +80,5 @@ Applications are not/should not be aware of each other, but packages are.
 ```
 
 In the `Cache/Packages` directory each file of `xxxxxxxx` will be the Packages file of the distro
-for each url specified in `/etc/sources.list` file. Each seperate `xxxxxxxx` file is for a different
+for each url specified in `/etc/apt/sources.list` file. Each seperate `xxxxxxxx` file is for a different
 URL which is the first line in the file, in the format `url: http://ftp.ca.debian.org/debian/`
