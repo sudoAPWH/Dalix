@@ -1,4 +1,7 @@
+use core::panic;
 use std::path::Path;
+
+use log::{error, info, warn, debug};
 
 use crate::system;
 
@@ -21,7 +24,7 @@ pub struct PackageSource {
 /// deb http://deb.debian.org/debian stable main
 ///
 /// This function will panic if the file cannot be read
-pub fn read_sources_list(root: &Path) -> Vec<PackageSource> {
+pub fn read_apt_sources_list(root: &Path) -> Vec<PackageSource> {
 	let mut sources: Vec<PackageSource> = Vec::new();
 
 	let sources_list = std::fs::read_to_string(root.join("etc").join("apt").join("sources.list"));
@@ -40,25 +43,42 @@ pub fn read_sources_list(root: &Path) -> Vec<PackageSource> {
 			})
 		}
 	} else {
+		error!("Failed to read /etc/apt/sources.list");
 		panic!("Failed to read /etc/apt/sources.list");
 	}
 
 	sources
 }
 
-pub fn update_package_lists(root: &Path) -> bool {
-	let sources = read_sources_list(root);
+pub fn update_package_lists(root: &Path) -> Result<(), String> {
+	let sources = read_apt_sources_list(root);
 
 	let mut i = 0;
+	system::rm(&root.join("System").join("Cache").join("Packages.bak"))?;
+	system::copy_recursive(
+		&root.join("System").join("Cache").join("Packages"),
+		&root.join("System").join("Cache").join("Packages.bak")
+	)?;
+	system::rm(&root.join("System").join("Cache").join("Packages"))?;
+	system::mkdir(&root.join("System").join("Cache").join("Packages"))?;
+
 	for source in sources {
 		if source.source_type == "deb" {
-			let rand_string =
-			system::wget(
+
+			let out = system::wget(
 				&source.url,
 				&root.join("System").join("Cache").join("Packages").join(i.to_string()));
+			if let Err(e) = out {
+				system::rm(&root.join("System").join("Cache").join("Packages"))?;
+				system::copy_recursive(
+					&root.join("System").join("Cache").join("Packages.bak"),
+					&root.join("System").join("Cache").join("Packages")
+				)?;
+				return Err(e);
+			}
 			i += 1;
 		}
 	}
 
-	true
+	Ok(())
 }

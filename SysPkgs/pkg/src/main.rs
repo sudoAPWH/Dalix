@@ -46,16 +46,18 @@ fn main() {
     if command == "xf" {
         backend::extract_deb_full(
             &DebFile::new(&arg),
-            Path::new(&format!("{}-dir", arg)));
+            Path::new(&format!("{}-dir", arg))
+		).unwrap();
     } else if command == "x" {
         backend::extract_deb(
             &DebFile::new(&arg),
-            Path::new(&format!("{}-dir", arg)));
+            Path::new(&format!("{}-dir", arg))
+		).unwrap();
     } else if command == "install-deb" {
 		backend::install_deb_pkg(
 			&DebFile::new(&arg),
 			Path::new(&args.root)
-		);
+		).unwrap();
 	}
 
 }

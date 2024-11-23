@@ -60,11 +60,11 @@ impl DebFile<'_> {
 ///     println!("Extraction failed!");
 /// }
 /// ```
-pub fn extract_deb_full(d: &DebFile, out: &Path) -> bool {
+pub fn extract_deb_full(d: &DebFile, out: &Path) -> Result<(), String> {
     system::cmd(&format!("dpkg-deb -R {} {}", d.path.display(), out.display()))
 }
 
-pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
+pub fn extract_deb(d: &DebFile, out: &Path) -> Result<(), String> {
     system::cmd(&format!("dpkg-deb -x {} {}", d.path.display(), out.display()))
 }
 
@@ -78,9 +78,9 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> bool {
 ///
 /// # Returns
 /// - `DebPkg` A struct containing info about the package.
-pub fn extract_info(deb: &DebFile) -> DebPkg {
+pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
     let dir = TempDir::new().unwrap();
-    extract_deb_full(&deb, dir.path());
+    extract_deb_full(&deb, dir.path())?;
     let mut control_file = File::open(
             dir.path()
             .join("DEBIAN")
@@ -130,7 +130,7 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
         }
     }
     // info!("Description: {}", description);
-    DebPkg {
+    Ok(DebPkg {
         name,
         version: PackageVersion::parse(&version).unwrap(),
         arch,
@@ -138,20 +138,21 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
         description,
         maintainer,
         path: deb.path.to_path_buf()
-    }
+    })
 }
 
 /// Installs a DebFile into the path specified by root
-pub fn install_deb_pkg(d: &DebFile, root: &Path) -> bool{
-	let info = extract_info(d);
+pub fn install_deb_pkg(d: &DebFile, root: &Path) -> Result<(), String> {
+	let info = extract_info(d)?;
 	let pkg_dir = root.join(format!("System/Packages/{}---{}", info.name, info.version.to_string()));
 	{
 		let dir = TempDir::new().unwrap();
-		extract_deb(&d, dir.path());
-		if system::copy_recursive(
+		extract_deb(&d, dir.path())?;
+		let out = system::copy_recursive(
 			&dir.path().to_path_buf(),
 			&pkg_dir
-		) {
+		);
+		if let Ok(_) = out {
 			info!("Extracted {} to {}", info.name, pkg_dir.display());
 		} else {
 			panic!("Failed to extract {} to {}", info.name, pkg_dir.display());
@@ -182,9 +183,9 @@ source = 'deb'",
 	info.maintainer,
 	info.description);
 	// info!("Pkg info:\n{}", info);
-	system::touch(&pkg_info_path);
+	system::touch(&pkg_info_path)?;
 	fs::write(&pkg_info_path, info).unwrap();
 	// info!("Wrote pkg-info to {}", &pkg_info_path.display());
 
-	true
+	Ok(())
 }

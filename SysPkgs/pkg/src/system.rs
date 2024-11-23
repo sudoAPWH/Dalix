@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::{Command, Output}};
+use std::{io::Error, path::PathBuf, process::{Command, Output}};
 use debian_packaging::package_version::PackageVersion;
 
 pub struct Package {
@@ -25,13 +25,17 @@ pub struct Package {
 /// # Returns
 ///
 /// A boolean indicating whether the command executed successfully.
-pub fn cmd(s: &str) -> bool {
-    Command::new("bash")
+pub fn cmd(s: &str) -> Result<(), String> {
+    if Command::new("bash")
         .arg("-c")
         .arg(s)
         .status()
         .expect(format!("Failed to run command {}", s).as_str())
-        .success()
+        .success() == true {
+		Ok(())
+	} else {
+		Err(format!("Failed to run command {}", s))
+	}
 }
 
 /// Executes a shell command and captures its output.
@@ -48,12 +52,11 @@ pub fn cmd(s: &str) -> bool {
 /// # Returns
 ///
 /// An `Output` struct containing the results of running the command.
-pub fn cmd_out(s: &str) -> Output {
+pub fn cmd_out(s: &str) -> Result<Output, Error> {
     Command::new("bash")
         .arg("-c")
         .arg(s)
         .output()
-        .expect(format!("Failed to run command {}", s).as_str())
 }
 
 /// Recursively copies the contents of one directory to another.
@@ -61,7 +64,7 @@ pub fn cmd_out(s: &str) -> Output {
 /// This function uses the `mkdir -p` command to create the destination directory and all its parents if they
 /// do not already exist, and then the `cp -r` command to copy the contents of the source directory to the destination
 /// directory. It returns a boolean indicating the success (`true`) or failure (`false`) of the operation.
-pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> bool {
+pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> Result<(), String> {
 	mkdir(to);
 	cmd(&format!("cp -r {}/* {}", from.display(), to.display()))
 }
@@ -71,7 +74,7 @@ pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> bool {
 /// This function uses the `mkdir -p` command to create the directory and all its parents if they
 /// do not already exist. It returns a boolean indicating the success (`true`) or failure (`false`)
 /// of the operation.
-pub fn mkdir(path: &PathBuf) -> bool {
+pub fn mkdir(path: &PathBuf) -> Result<(), String> {
 	cmd(&format!("mkdir -p {}", path.display()))
 }
 
@@ -81,7 +84,7 @@ pub fn mkdir(path: &PathBuf) -> bool {
 /// This function uses the `touch` command to create a new file or update the timestamps of an
 /// existing file at the given path. It returns a boolean indicating the success (`true`) or
 /// failure (`false`) of the operation.
-pub fn touch(path: &PathBuf) -> bool {
+pub fn touch(path: &PathBuf) -> Result<(), String> {
 	cmd(&format!("touch {}", path.display()))
 }
 
@@ -89,7 +92,7 @@ pub fn touch(path: &PathBuf) -> bool {
 ///
 /// This function uses the `wget` command to download the given URL, and saves the contents to the given path.
 /// It returns a boolean indicating the success (`true`) or failure (`false`) of the download operation.
-pub fn wget(url: &str, out: &PathBuf) -> bool {
+pub fn wget(url: &str, out: &PathBuf) -> Result<(), String> {
 	cmd(&format!("wget {} -o {}", url, out.display()))
 }
 
@@ -98,6 +101,6 @@ pub fn wget(url: &str, out: &PathBuf) -> bool {
 /// This function uses the `rm -rf` command to delete the given path. It
 /// returns a boolean indicating the success (`true`) or failure (`false`) of the
 /// deletion operation.
-pub fn rm(path: &PathBuf) -> bool {
+pub fn rm(path: &PathBuf) -> Result<(), String> {
 	cmd(&format!("rm -rf {}", path.display()))
 }
