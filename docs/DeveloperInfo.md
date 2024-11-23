@@ -66,10 +66,11 @@ Applications are not/should not be aware of each other, but packages are.
 │	├── Packages
 │	│	└── libsqsh---1.2.3
 │	├── Cache
-│	│	└── Packages
-│	│		├── netxomnq
-│	│		├── xcobhsdh
-│	│		└── lskhseru
+│	│	├── Packages
+│	│	│	├── 0
+│	│	│	├── 1
+│	│	│	└── 2
+│	│	└── Packages.bak
 │	├── Binaries -> ../../bin
 │	├── Devices -> ../../dev
 │	├── Sys -> ../../sys
