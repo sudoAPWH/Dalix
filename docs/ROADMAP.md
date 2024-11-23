@@ -1,8 +1,8 @@
 - [ ] implement pkg
 	- [x] Version class
-	- [ ] DebianUtils class
-	- [ ] install debian package to chroot
-	- [ ] get meta-data
+	- [x] install debian package to chroot
+	- [x] get meta-data
+	- [ ] fetch package from debian's servers
 	- [ ] search packages
 	- [ ] generate occurence count of each folder
 	- [ ] launch bwrap with correct options
