@@ -100,23 +100,23 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
     for line in control_string.lines() {
         if line.starts_with("Package: ") {
             block = "".to_string();
-            info!("{}", line);
+            // info!("{}", line);
             line[9..].clone_into(&mut name)
         } else if line.starts_with("Version: ") {
             block = "".to_string();
-            info!("{}", line);
+            // info!("{}", line);
             line[9..].clone_into(&mut version)
         } else if line.starts_with("Architecture: ") {
             block = "".to_string();
-            info!("{}", line);
+            // info!("{}", line);
             line[14..].clone_into(&mut arch)
         } else if line.starts_with("Depends: ") {
             block = "".to_string();
-            info!("{}", line);
+            // info!("{}", line);
             line[9..].clone_into(&mut deps)
         } else if line.starts_with("Maintainer: ") {
             block = "".to_string();
-            info!("{}", line);
+            // info!("{}", line);
             line[12..].clone_into(&mut maintainer)
         } else if line.starts_with("Description: ") {
             block = "Description".to_string();
@@ -129,7 +129,7 @@ pub fn extract_info(deb: &DebFile) -> DebPkg {
             }
         }
     }
-    info!("Description: {}", description);
+    // info!("Description: {}", description);
     DebPkg {
         name,
         version: PackageVersion::parse(&version).unwrap(),

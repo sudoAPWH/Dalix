@@ -50,8 +50,6 @@ fn main() {
         debian_utils::extract_deb(
             &DebFile::new(&arg),
             Path::new(&format!("{}-dir", arg)));
-    } else if command == "xi" {
-        debian_utils::extract_info(&DebFile::new(&arg));
     } else if command == "install-deb" {
 		debian_utils::install_deb_pkg(
 			&DebFile::new(&arg),
