@@ -71,6 +71,7 @@ Applications are not/should not be aware of each other, but packages are.
 │	│	│	├── 1
 │	│	│	└── 2
 │	│	└── Packages.bak
+│	│		└── ...
 │	├── Binaries -> ../../bin
 │	├── Devices -> ../../dev
 │	├── Sys -> ../../sys
