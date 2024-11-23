@@ -6,11 +6,11 @@ use log::{error, warn, info, debug};
 use clap::Parser;
 use std::path::Path;
 
-mod debian_utils;
+mod backend;
 mod system;
 mod dependencies;
 
-use debian_utils::DebFile;
+use backend::DebFile;
 
 #[derive(Parser)]
 struct Args {
@@ -43,15 +43,15 @@ fn main() {
     }
 
     if command == "xf" {
-        debian_utils::extract_deb_full(
+        backend::extract_deb_full(
             &DebFile::new(&arg),
             Path::new(&format!("{}-dir", arg)));
     } else if command == "x" {
-        debian_utils::extract_deb(
+        backend::extract_deb(
             &DebFile::new(&arg),
             Path::new(&format!("{}-dir", arg)));
     } else if command == "install-deb" {
-		debian_utils::install_deb_pkg(
+		backend::install_deb_pkg(
 			&DebFile::new(&arg),
 			Path::new(&args.root)
 		);

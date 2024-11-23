@@ -61,19 +61,24 @@ Applications are not/should not be aware of each other, but packages are.
 ```
 /
 ├── Applications
-│	└── LibreOffice
+│	└── LibreOffice.app
 ├── System
 │	├── Packages
 │	│	└── libsqsh---1.2.3
 │	├── Cache
-│	│	├── Packages2
-│	│	├── Packages1
-│	│	└── Packages0
+│	│	└── Packages
+│	│		├── netxomnq
+│	│		├── xcobhsdh
+│	│		└── lskhseru
+│	├── Binaries -> ../../bin
+│	├── Devices -> ../../dev
+│	├── Sys -> ../../sys
+│	├── Temporary -> ../../tmp
 │	└── Config -> ../../etc
 └── Volumes
 	└── USB3.0
 ```
 
-In the `Cache` directory the file of `PackagesX` will be the Packages file of the `sid` distro for each
-url specified in `/etc/sources.list` file. Each seperate `PackagesX` file is for a different URL which
-is the first line in the file, in the format `url: https://ftp.ca.debian.org/debian/`
+In the `Cache/Packages` directory each file of `xxxxxxxx` will be the Packages file of the distro
+for each url specified in `/etc/sources.list` file. Each seperate `xxxxxxxx` file is for a different
+URL which is the first line in the file, in the format `url: http://ftp.ca.debian.org/debian/`
