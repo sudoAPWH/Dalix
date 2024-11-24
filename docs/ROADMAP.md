@@ -4,7 +4,9 @@
 	- [x] get meta-data
 	- [ ] fetch package from debian's servers
 	- [ ] search packages
-	- [ ] generate occurence count of each folder
+	- [ ] dependency resolving
+		- [ ] installation
+		- [ ] runtime
 	- [ ] launch bwrap with correct options
 		- [ ] Mount base system readonly
 		- [ ] Overlay required packages
