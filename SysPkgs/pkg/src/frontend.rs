@@ -2,6 +2,7 @@ use core::panic;
 use std::{fs, path::Path};
 use std::env::consts::ARCH;
 
+use debian_packaging::package_version::PackageVersion;
 use debian_packaging::repository::release::SourcesFileEntry;
 use log::{error, info, warn, debug};
 
@@ -19,6 +20,12 @@ pub struct PackageSource {
 	url: String,
 	dist: String,
 	subtype: String
+}
+
+pub struct PackageSelection {
+	name: String,
+	version: Option<PackageVersion>,
+	arch: Option<String>
 }
 
 /// Reads /etc/apt/sources.list and returns a Vec of PackageSources
@@ -106,4 +113,8 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 	}
 
 	Ok(())
+}
+
+pub fn retrieve_package(pkg: &PackageSelection) {
+
 }
