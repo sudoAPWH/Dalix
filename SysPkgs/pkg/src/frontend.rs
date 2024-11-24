@@ -1,5 +1,6 @@
 use core::panic;
 use std::path::Path;
+use std::env::consts::ARCH;
 
 use log::{error, info, warn, debug};
 
@@ -43,8 +44,8 @@ pub fn read_apt_sources_list(root: &Path) -> Vec<PackageSource> {
 			})
 		}
 	} else {
-		error!("Failed to read /etc/apt/sources.list");
-		panic!("Failed to read /etc/apt/sources.list");
+		error!("Failed to read {}/etc/apt/sources.list", root.display());
+		panic!("Failed to read {}/etc/apt/sources.list", root.display());
 	}
 
 	sources
@@ -55,10 +56,10 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 
 	let mut i = 0;
 	system::rm(&root.join("System").join("Cache").join("Packages.bak"))?;
-	system::copy_recursive(
+	let _ = system::copy_recursive(
 		&root.join("System").join("Cache").join("Packages"),
 		&root.join("System").join("Cache").join("Packages.bak")
-	)?;
+	); // If this fails it just means we don't have a package cache currently.
 	system::rm(&root.join("System").join("Cache").join("Packages"))?;
 	system::mkdir(&root.join("System").join("Cache").join("Packages"))?;
 
@@ -66,9 +67,10 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 		if source.source_type == "deb" {
 
 			let out = system::wget(
-				&source.url,
-				&root.join("System").join("Cache").join("Packages").join(i.to_string()));
+				&format!("{}/dists/{}/{}/binary-{}/Packages.gz", &source.url, &source.dist, source.subtype, ARCH),
+				&root.join("System").join("Cache").join("Packages").join(i.to_string() + ".gz"));
 			if let Err(e) = out {
+				error!("{}", e);
 				system::rm(&root.join("System").join("Cache").join("Packages"))?;
 				system::copy_recursive(
 					&root.join("System").join("Cache").join("Packages.bak"),
