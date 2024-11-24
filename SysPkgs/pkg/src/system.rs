@@ -93,7 +93,7 @@ pub fn touch(path: &PathBuf) -> Result<(), String> {
 /// This function uses the `wget` command to download the given URL, and saves the contents to the given path.
 /// It returns a boolean indicating the success (`true`) or failure (`false`) of the download operation.
 pub fn wget(url: &str, out: &PathBuf) -> Result<(), String> {
-	cmd(&format!("wget {} -o {}", url, out.display()))
+	cmd(&format!("wget {} -O {}", url, out.display()))
 }
 
 /// Deletes the file or directory at the given path.
