@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 log = "*"
 colog = "*"
-rust-apt = "*"
+indicatif = "*"
 temp-dir = "*"
 clap = { version = "*", features = ["derive"] }
 debian-packaging = "0.18.0"

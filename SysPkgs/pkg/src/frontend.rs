@@ -2,7 +2,10 @@ use core::panic;
 use std::{fs, path::Path};
 use std::env::consts::ARCH;
 
+use debian_packaging::repository::release::SourcesFileEntry;
 use log::{error, info, warn, debug};
+
+use indicatif::{ProgressBar, ProgressStyle};
 
 use crate::system;
 
@@ -68,6 +71,10 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 
 	let mut index_str: String = String::new();
 
+	let sources_len = sources.len();
+	let bar = ProgressBar::new(sources_len as u64);
+	bar.set_message("Updating package lists...");
+
 	for source in sources {
 		if source.source_type == "deb" {
 
@@ -83,6 +90,7 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 				)?;
 				return Err(e);
 			}
+			bar.inc(1);
 			system::gzip_extract(&pkg_cache.join(i.to_string() + ".gz"))?;
 
 			index_str.push_str(&format!("{} {} {} {}\n",i.to_string(), source.url, source.dist, source.subtype));

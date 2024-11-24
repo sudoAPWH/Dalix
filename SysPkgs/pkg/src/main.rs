@@ -60,6 +60,7 @@ fn main() {
 		).unwrap();
 	} else if command == "update" && arg == "pkg-list" {
 		frontend::update_package_lists(Path::new(&args.root)).unwrap();
+		info!("Updated package lists!");
 	}
 
 }
