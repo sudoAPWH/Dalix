@@ -87,12 +87,12 @@ for each url specified in `/etc/apt/sources.list` file. Each seperate `xxxxxxxx`
 URL. The index file in that directory will be in the format:
 
 ```
-filename url
+filename url codename subtype
 ```
 
 e.g.
 
 ```
-0 http://deb.debian.org/debian
-1 http://yeb.yebian.borg/whatever
+0 http://deb.debian.org/debian stable main
+1 http://yeb.yebian.borg/whatever v1 non-free-firmware
 ```

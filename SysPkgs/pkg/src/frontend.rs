@@ -1,5 +1,5 @@
 use core::panic;
-use std::path::Path;
+use std::{fs, path::Path};
 use std::env::consts::ARCH;
 
 use log::{error, info, warn, debug};
@@ -66,6 +66,8 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 	system::rm(&pkg_cache)?;
 	system::mkdir(&pkg_cache)?;
 
+	let mut index_str: String = String::new();
+
 	for source in sources {
 		if source.source_type == "deb" {
 
@@ -83,8 +85,16 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 			}
 			system::gzip_extract(&pkg_cache.join(i.to_string() + ".gz"))?;
 
+			index_str.push_str(&format!("{} {}\n",i.to_string(), source.url));
+
 			i += 1;
 		}
+	}
+
+	system::touch(&pkg_cache.join("index"))?;
+	let out = fs::write(&pkg_cache.join("index"), &index_str);
+	if let Err(e) = out {
+		return Err(e.to_string());
 	}
 
 	Ok(())
