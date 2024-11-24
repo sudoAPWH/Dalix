@@ -67,6 +67,7 @@ Applications are not/should not be aware of each other, but packages are.
 │	│	└── libsqsh---1.2.3
 │	├── Cache
 │	│	├── Packages
+│	│	│	├── index
 │	│	│	├── 0
 │	│	│	├── 1
 │	│	│	└── 2
@@ -83,4 +84,15 @@ Applications are not/should not be aware of each other, but packages are.
 
 In the `Cache/Packages` directory each file of `xxxxxxxx` will be the Packages file of the distro
 for each url specified in `/etc/apt/sources.list` file. Each seperate `xxxxxxxx` file is for a different
-URL which is the first line in the file, in the format `url: http://ftp.ca.debian.org/debian/`
+URL. The index file in that directory will be in the format:
+
+```
+filename url
+```
+
+e.g.
+
+```
+0 http://deb.debian.org/debian
+1 http://yeb.yebian.borg/whatever
+```

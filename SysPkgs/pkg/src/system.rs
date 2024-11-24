@@ -1,4 +1,4 @@
-use std::{io::Error, path::PathBuf, process::{Command, Output}};
+use std::{env::consts::ARCH, io::Error, path::PathBuf, process::{Command, Output}};
 use debian_packaging::package_version::PackageVersion;
 
 pub struct Package {
@@ -59,11 +59,22 @@ pub fn cmd_out(s: &str) -> Result<Output, Error> {
         .output()
 }
 
+pub fn get_arch() -> String {
+	let arch = ARCH;
+	if arch == "x86_64" {
+		"amd64".to_string()
+	} else if arch == "aarch64" {
+		"aarch64".to_string()
+	} else { // WHAT!!!!
+		"amd64".to_string()
+	}
+}
+
 /// Recursively copies the contents of one directory to another.
 ///
 /// This function uses the `mkdir -p` command to create the destination directory and all its parents if they
 /// do not already exist, and then the `cp -r` command to copy the contents of the source directory to the destination
-/// directory. It returns a boolean indicating the success (`true`) or failure (`false`) of the operation.
+/// directory.
 pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> Result<(), String> {
 	mkdir(to)?;
 	cmd(&format!("cp -r {}/* {}", from.display(), to.display()))
@@ -72,8 +83,7 @@ pub fn copy_recursive(from: &PathBuf, to: &PathBuf) -> Result<(), String> {
 /// Creates a new directory at the specified path.
 ///
 /// This function uses the `mkdir -p` command to create the directory and all its parents if they
-/// do not already exist. It returns a boolean indicating the success (`true`) or failure (`false`)
-/// of the operation.
+/// do not already exist.
 pub fn mkdir(path: &PathBuf) -> Result<(), String> {
 	cmd(&format!("mkdir -p {}", path.display()))
 }
@@ -82,8 +92,7 @@ pub fn mkdir(path: &PathBuf) -> Result<(), String> {
 /// at the specified path.
 ///
 /// This function uses the `touch` command to create a new file or update the timestamps of an
-/// existing file at the given path. It returns a boolean indicating the success (`true`) or
-/// failure (`false`) of the operation.
+/// existing file at the given path.
 pub fn touch(path: &PathBuf) -> Result<(), String> {
 	cmd(&format!("touch {}", path.display()))
 }
@@ -91,16 +100,21 @@ pub fn touch(path: &PathBuf) -> Result<(), String> {
 /// Downloads the given URL and saves the contents to the given path.
 ///
 /// This function uses the `wget` command to download the given URL, and saves the contents to the given path.
-/// It returns a boolean indicating the success (`true`) or failure (`false`) of the download operation.
 pub fn wget(url: &str, out: &PathBuf) -> Result<(), String> {
 	cmd(&format!("wget {} -O {}", url, out.display()))
 }
 
 /// Deletes the file or directory at the given path.
 ///
-/// This function uses the `rm -rf` command to delete the given path. It
-/// returns a boolean indicating the success (`true`) or failure (`false`) of the
-/// deletion operation.
+/// This function uses the `rm -rf` command to delete the given path.
 pub fn rm(path: &PathBuf) -> Result<(), String> {
 	cmd(&format!("rm -rf {}", path.display()))
+}
+
+/// Decompresses a gzipped file at the given path.
+///
+/// This function uses the `gzip -d` command to decompress a gzipped file at the given path.
+/// Note: It DOES delete the archive file.
+pub fn gzip_extract(path: &PathBuf) -> Result<(), String> {
+	cmd(&format!("gzip -d {}", path.display()))
 }

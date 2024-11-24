@@ -54,30 +54,35 @@ pub fn read_apt_sources_list(root: &Path) -> Vec<PackageSource> {
 pub fn update_package_lists(root: &Path) -> Result<(), String> {
 	let sources = read_apt_sources_list(root);
 
+	let pkg_cache = root.join("System").join("Cache").join("Packages");
+	let pkg_cache_bak = root.join("System").join("Cache").join("Packages.bak");
+
 	let mut i = 0;
-	system::rm(&root.join("System").join("Cache").join("Packages.bak"))?;
+	system::rm(&pkg_cache_bak)?;
 	let _ = system::copy_recursive(
-		&root.join("System").join("Cache").join("Packages"),
-		&root.join("System").join("Cache").join("Packages.bak")
+		&pkg_cache,
+		&pkg_cache_bak
 	); // If this fails it just means we don't have a package cache currently.
-	system::rm(&root.join("System").join("Cache").join("Packages"))?;
-	system::mkdir(&root.join("System").join("Cache").join("Packages"))?;
+	system::rm(&pkg_cache)?;
+	system::mkdir(&pkg_cache)?;
 
 	for source in sources {
 		if source.source_type == "deb" {
 
 			let out = system::wget(
-				&format!("{}/dists/{}/{}/binary-{}/Packages.gz", &source.url, &source.dist, source.subtype, ARCH),
-				&root.join("System").join("Cache").join("Packages").join(i.to_string() + ".gz"));
+				&format!("{}/dists/{}/{}/binary-{}/Packages.gz", &source.url, &source.dist, source.subtype, system::get_arch()),
+				&pkg_cache.join(i.to_string() + ".gz"));
 			if let Err(e) = out {
 				error!("{}", e);
-				system::rm(&root.join("System").join("Cache").join("Packages"))?;
+				system::rm(&pkg_cache)?;
 				system::copy_recursive(
-					&root.join("System").join("Cache").join("Packages.bak"),
-					&root.join("System").join("Cache").join("Packages")
+					&pkg_cache_bak,
+					&pkg_cache
 				)?;
 				return Err(e);
 			}
+			system::gzip_extract(&pkg_cache.join(i.to_string() + ".gz"))?;
+
 			i += 1;
 		}
 	}
