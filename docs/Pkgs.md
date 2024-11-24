@@ -36,14 +36,11 @@ All the other lines are a description
 which can span multiple lines.
 '''
 
-Depends = '''
-libsqsh (>= 1.2.3),
-python (>= 3.10),
-joy,
-happiness,
-love,
-etc.
-'''
+Depends = "libsqsh (>= 1.2.3), python (>= 3.10) | python3 (>= 3.10), joy, happiness, love, etc."
+# A mix of Enhances, Suggests,
+Recommends = "peace"
+Suggests = "family"
+PreDepends = "life"
 
 # For use in automated scripts so there only has to be one meta-data file
 [Other]

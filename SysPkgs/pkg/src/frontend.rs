@@ -85,7 +85,7 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 			}
 			system::gzip_extract(&pkg_cache.join(i.to_string() + ".gz"))?;
 
-			index_str.push_str(&format!("{} {}\n",i.to_string(), source.url));
+			index_str.push_str(&format!("{} {} {} {}\n",i.to_string(), source.url, source.dist, source.subtype));
 
 			i += 1;
 		}

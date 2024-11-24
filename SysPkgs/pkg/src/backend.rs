@@ -11,6 +11,10 @@ pub struct DebPkg {
     version: PackageVersion,
     arch: String,
     deps: String,
+	recommends: String,
+	suggests: String,
+	pre_depends: String,
+	enhances: String,
     description: String,
     maintainer: String,
     path: PathBuf
@@ -93,6 +97,10 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
     let mut version = String::new();
     let mut arch = String::new();
     let mut deps = String::new();
+	let mut recommends = String::new();
+	let mut suggests = String::new();
+	let mut pre_depends = String::new();
+	let mut enhances = String::new();
     let mut description = String::new();
     let mut maintainer = String::new();
 
@@ -114,6 +122,22 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
             block = "".to_string();
             // info!("{}", line);
             line[9..].clone_into(&mut deps)
+		} else if line.starts_with("Recommends: ") {
+			block = "".to_string();
+			// info!("{}", line);
+			line[12..].clone_into(&mut recommends)
+		} else if line.starts_with("Suggests: ") {
+			block = "".to_string();
+			// info!("{}", line);
+			line[11..].clone_into(&mut suggests)
+		} else if line.starts_with("Pre-Depends: ") {
+			block = "".to_string();
+			// info!("{}", line);
+			line[13..].clone_into(&mut pre_depends)
+		} else if line.starts_with("Enhances: ") {
+			block = "".to_string();
+			// info!("{}", line);
+			line[11..].clone_into(&mut enhances)
         } else if line.starts_with("Maintainer: ") {
             block = "".to_string();
             // info!("{}", line);
@@ -135,6 +159,10 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
         version: PackageVersion::parse(&version).unwrap(),
         arch,
         deps,
+		recommends,
+		suggests,
+		pre_depends,
+		enhances,
         description,
         maintainer,
         path: deb.path.to_path_buf()
@@ -171,6 +199,10 @@ Name = '{}'
 Version = '{}'
 Architecture = '{}'
 Depends = '{}'
+Recommends = '{}'
+Suggests = '{}'
+Pre-Depends = '{}'
+Enhances = '{}'
 Maintainer = '{}'
 Description = '''{}'''
 
@@ -180,6 +212,10 @@ source = 'deb'",
 	info.version.to_string(),
 	info.arch,
 	info.deps,
+	info.recommends,
+	info.suggests,
+	info.pre_depends,
+	info.enhances,
 	info.maintainer,
 	info.description);
 	// info!("Pkg info:\n{}", info);
