@@ -6,7 +6,7 @@ use log::{error, info, warn, debug};
 use crate::system;
 
 /// A struct representing a package source
-/// source_tpye: e.g. deb
+/// source_type: e.g. deb
 /// url: e.g. http://deb.debian.org/debian
 /// dist: e.g. "stable" or "sid"
 /// subtype: e.g. "main" or "non-free"
