@@ -9,6 +9,7 @@ use log::{error, info, warn, debug};
 use indicatif::{ProgressBar, ProgressStyle};
 
 use crate::system;
+use crate::backend::DebPkg;
 
 /// A struct representing a package source
 /// source_type: e.g. deb
@@ -115,6 +116,20 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 	Ok(())
 }
 
-pub fn retrieve_package(pkg: &PackageSelection) {
+pub fn read_package_lists(root: &Path) {
+	let pkg_cache = root.join("System").join("Cache").join("Packages");
+	let index = root.join("System").join("Cache").join("Packages").join("index");
+	let index_str = fs::read_to_string(&index).unwrap();
 
+	for line in index_str.lines() {
+		let parts = line.split(" ").collect::<Vec<&str>>();
+		if parts.len() != 4 {
+			continue
+		}
+	}
+
+}
+
+pub fn retrieve_package(pkg: &PackageSelection, root: &Path) -> Result<(), String> {
+	Ok(())
 }

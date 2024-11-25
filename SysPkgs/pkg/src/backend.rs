@@ -17,6 +17,7 @@ pub struct DebPkg {
 	enhances: String,
     description: String,
     maintainer: String,
+	homepage: String,
     path: PathBuf
 }
 
@@ -142,6 +143,10 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
             block = "".to_string();
             // info!("{}", line);
             line[12..].clone_into(&mut maintainer)
+		} else if line.starts_with("Homepage: ") {
+			block = "".to_string();
+			// info!("{}", line);
+			line[10..].clone_into(&mut maintainer)
         } else if line.starts_with("Description: ") {
             block = "Description".to_string();
             line[13..].clone_into(&mut description)
@@ -165,6 +170,7 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
 		enhances,
         description,
         maintainer,
+		homepage: "".to_string(),
         path: deb.path.to_path_buf()
     })
 }
