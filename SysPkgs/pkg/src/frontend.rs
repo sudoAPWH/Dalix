@@ -144,6 +144,11 @@ pub fn retrieve_package(pkg: &PackageSelection, root: &Path) -> Result<(), Strin
     let pkg_version = pkg.version;
     
     let arch: = system.get_arch();
+    if let Some(a) = pkg_arch {
+        arch = a;
+    }
+
+    // TODO
     
     Ok(())
 
