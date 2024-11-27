@@ -2,14 +2,14 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use log::{error, warn, info, debug};
 use clap::Parser;
+use log::{debug, error, info, warn};
 use std::path::Path;
 
 mod backend;
-mod system;
 mod dependencies;
 mod frontend;
+mod system;
 
 use backend::DebFile;
 
@@ -18,15 +18,24 @@ struct Args {
     #[clap(short = 'p', long = "output-only", action = clap::ArgAction::SetTrue, help = "Only output command to be run")]
     output_only: bool,
 
-    #[clap(short = 'r', long = "root", help = "The root directory of the system", default_value = "/")]
+    #[clap(
+        short = 'r',
+        long = "root",
+        help = "The root directory of the system",
+        default_value = "/"
+    )]
     root: String,
 
     #[clap(help = "The command to run", name = "command", index = 1)]
     command: String,
 
-    #[clap(help = "The argument to the command", name = "arg", index = 2, required = true)]
+    #[clap(
+        help = "The argument to the command",
+        name = "arg",
+        index = 2,
+        required = true
+    )]
     arg: String,
-
 }
 
 fn main() {
@@ -36,31 +45,21 @@ fn main() {
     let arg = args.arg;
 
     info!("Command given: {}\nExcellent choice!", command);
-	info!("With root directory: {}", args.root);
-	info!("With argument: {}", arg);
+    info!("With root directory: {}", args.root);
+    info!("With argument: {}", arg);
 
     if args.output_only {
         info!("You have requested for output-only mode...");
     }
 
     if command == "xf" {
-        backend::extract_deb_full(
-            &DebFile::new(&arg),
-            Path::new(&format!("{}-dir", arg))
-		).unwrap();
+        backend::extract_deb_full(&DebFile::new(&arg), Path::new(&format!("{}-dir", arg))).unwrap();
     } else if command == "x" {
-        backend::extract_deb(
-            &DebFile::new(&arg),
-            Path::new(&format!("{}-dir", arg))
-		).unwrap();
+        backend::extract_deb(&DebFile::new(&arg), Path::new(&format!("{}-dir", arg))).unwrap();
     } else if command == "install-deb" {
-		backend::install_deb_pkg(
-			&DebFile::new(&arg),
-			Path::new(&args.root)
-		).unwrap();
-	} else if command == "update" && arg == "pkg-list" {
-		frontend::update_package_lists(Path::new(&args.root)).unwrap();
-		info!("Updated package lists!");
-	}
-
+        backend::install_deb_pkg(&DebFile::new(&arg), Path::new(&args.root)).unwrap();
+    } else if command == "update" && arg == "pkg-list" {
+        frontend::update_package_lists(Path::new(&args.root)).unwrap();
+        info!("Updated package lists!");
+    }
 }

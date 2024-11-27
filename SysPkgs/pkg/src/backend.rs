@@ -1,34 +1,37 @@
-use std::{fs, path::{Path, PathBuf}};
 use crate::system;
-use std::process::ExitStatus;
-use temp_dir::TempDir;
-use std::fs::File;
-use log::{error, warn, info, debug};
 use debian_packaging::package_version::PackageVersion;
+use log::{debug, error, info, warn};
+use std::fs::File;
+use std::process::ExitStatus;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+use temp_dir::TempDir;
 
 pub struct DebPkg {
     name: String,
     version: PackageVersion,
     arch: String,
     deps: String,
-	recommends: String,
-	suggests: String,
-	pre_depends: String,
-	enhances: String,
+    recommends: String,
+    suggests: String,
+    pre_depends: String,
+    enhances: String,
     description: String,
     maintainer: String,
-	homepage: String,
-    path: PathBuf
+    homepage: String,
+    path: PathBuf,
 }
 
 pub struct DebFile<'a> {
-    path: &'a Path
+    path: &'a Path,
 }
 
 impl DebFile<'_> {
     pub fn new(path: &str) -> DebFile {
         DebFile {
-            path: Path::new(path)
+            path: Path::new(path),
         }
     }
 }
@@ -66,11 +69,19 @@ impl DebFile<'_> {
 /// }
 /// ```
 pub fn extract_deb_full(d: &DebFile, out: &Path) -> Result<(), String> {
-    system::cmd(&format!("dpkg-deb -R {} {}", d.path.display(), out.display()))
+    system::cmd(&format!(
+        "dpkg-deb -R {} {}",
+        d.path.display(),
+        out.display()
+    ))
 }
 
 pub fn extract_deb(d: &DebFile, out: &Path) -> Result<(), String> {
-    system::cmd(&format!("dpkg-deb -x {} {}", d.path.display(), out.display()))
+    system::cmd(&format!(
+        "dpkg-deb -x {} {}",
+        d.path.display(),
+        out.display()
+    ))
 }
 
 /// Gets a DebPkg struct from a deb file
@@ -86,11 +97,7 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> Result<(), String> {
 pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
     let dir = TempDir::new().unwrap();
     extract_deb_full(&deb, dir.path())?;
-    let mut control_file = File::open(
-            dir.path()
-            .join("DEBIAN")
-            .join("control")
-        ).unwrap();
+    let mut control_file = File::open(dir.path().join("DEBIAN").join("control")).unwrap();
     let mut control_string = String::new();
     std::io::Read::read_to_string(&mut control_file, &mut control_string).unwrap();
 
@@ -98,10 +105,10 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
     let mut version = String::new();
     let mut arch = String::new();
     let mut deps = String::new();
-	let mut recommends = String::new();
-	let mut suggests = String::new();
-	let mut pre_depends = String::new();
-	let mut enhances = String::new();
+    let mut recommends = String::new();
+    let mut suggests = String::new();
+    let mut pre_depends = String::new();
+    let mut enhances = String::new();
     let mut description = String::new();
     let mut maintainer = String::new();
 
@@ -123,37 +130,37 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
             block = "".to_string();
             // info!("{}", line);
             line[9..].clone_into(&mut deps)
-		} else if line.starts_with("Recommends: ") {
-			block = "".to_string();
-			// info!("{}", line);
-			line[12..].clone_into(&mut recommends)
-		} else if line.starts_with("Suggests: ") {
-			block = "".to_string();
-			// info!("{}", line);
-			line[11..].clone_into(&mut suggests)
-		} else if line.starts_with("Pre-Depends: ") {
-			block = "".to_string();
-			// info!("{}", line);
-			line[13..].clone_into(&mut pre_depends)
-		} else if line.starts_with("Enhances: ") {
-			block = "".to_string();
-			// info!("{}", line);
-			line[11..].clone_into(&mut enhances)
+        } else if line.starts_with("Recommends: ") {
+            block = "".to_string();
+            // info!("{}", line);
+            line[12..].clone_into(&mut recommends)
+        } else if line.starts_with("Suggests: ") {
+            block = "".to_string();
+            // info!("{}", line);
+            line[11..].clone_into(&mut suggests)
+        } else if line.starts_with("Pre-Depends: ") {
+            block = "".to_string();
+            // info!("{}", line);
+            line[13..].clone_into(&mut pre_depends)
+        } else if line.starts_with("Enhances: ") {
+            block = "".to_string();
+            // info!("{}", line);
+            line[11..].clone_into(&mut enhances)
         } else if line.starts_with("Maintainer: ") {
             block = "".to_string();
             // info!("{}", line);
             line[12..].clone_into(&mut maintainer)
-		} else if line.starts_with("Homepage: ") {
-			block = "".to_string();
-			// info!("{}", line);
-			line[10..].clone_into(&mut maintainer)
+        } else if line.starts_with("Homepage: ") {
+            block = "".to_string();
+            // info!("{}", line);
+            line[10..].clone_into(&mut maintainer)
         } else if line.starts_with("Description: ") {
             block = "Description".to_string();
             line[13..].clone_into(&mut description)
         } else if line.starts_with(" ") {
             if block != "".to_string() {
                 if block == "Description" {
-                    description.push_str(&format!("{}\n",&line[1..]));
+                    description.push_str(&format!("{}\n", &line[1..]));
                 }
             }
         }
@@ -164,40 +171,40 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
         version: PackageVersion::parse(&version).unwrap(),
         arch,
         deps,
-		recommends,
-		suggests,
-		pre_depends,
-		enhances,
+        recommends,
+        suggests,
+        pre_depends,
+        enhances,
         description,
         maintainer,
-		homepage: "".to_string(),
-        path: deb.path.to_path_buf()
+        homepage: "".to_string(),
+        path: deb.path.to_path_buf(),
     })
 }
 
 /// Installs a DebFile into the path specified by root
 pub fn install_deb_pkg(d: &DebFile, root: &Path) -> Result<(), String> {
-	let info = extract_info(d)?;
-	let pkg_dir = root.join(format!("System/Packages/{}---{}", info.name, info.version.to_string()));
-	{
-		let dir = TempDir::new().unwrap();
-		extract_deb(&d, dir.path())?;
-		let out = system::copy_recursive(
-			&dir.path().to_path_buf(),
-			&pkg_dir
-		);
-		if let Ok(_) = out {
-			info!("Extracted {} to {}", info.name, pkg_dir.display());
-		} else {
-			panic!("Failed to extract {} to {}", info.name, pkg_dir.display());
-		}
-	} // TempDir gets dropped here
-	// pkg_dir is stil valid though
+    let info = extract_info(d)?;
+    let pkg_dir = root.join(format!(
+        "System/Packages/{}---{}",
+        info.name,
+        info.version.to_string()
+    ));
+    {
+        let dir = TempDir::new().unwrap();
+        extract_deb(&d, dir.path())?;
+        let out = system::copy_recursive(&dir.path().to_path_buf(), &pkg_dir);
+        if let Ok(_) = out {
+            info!("Extracted {} to {}", info.name, pkg_dir.display());
+        } else {
+            panic!("Failed to extract {} to {}", info.name, pkg_dir.display());
+        }
+    } // TempDir gets dropped here
+      // pkg_dir is stil valid though
 
-
-	let pkg_info_path = pkg_dir.join("pkg-info");
-	let info: String = format!(
-r"InfoType = 1
+    let pkg_info_path = pkg_dir.join("pkg-info");
+    let info: String = format!(
+        r"InfoType = 1
 DepsIncluded = false
 
 [Package]
@@ -214,20 +221,21 @@ Description = '''{}'''
 
 [Other]
 source = 'deb'",
-	info.name,
-	info.version.to_string(),
-	info.arch,
-	info.deps,
-	info.recommends,
-	info.suggests,
-	info.pre_depends,
-	info.enhances,
-	info.maintainer,
-	info.description);
-	// info!("Pkg info:\n{}", info);
-	system::touch(&pkg_info_path)?;
-	fs::write(&pkg_info_path, info).unwrap();
-	// info!("Wrote pkg-info to {}", &pkg_info_path.display());
+        info.name,
+        info.version.to_string(),
+        info.arch,
+        info.deps,
+        info.recommends,
+        info.suggests,
+        info.pre_depends,
+        info.enhances,
+        info.maintainer,
+        info.description
+    );
+    // info!("Pkg info:\n{}", info);
+    system::touch(&pkg_info_path)?;
+    fs::write(&pkg_info_path, info).unwrap();
+    // info!("Wrote pkg-info to {}", &pkg_info_path.display());
 
-	Ok(())
+    Ok(())
 }
