@@ -120,7 +120,7 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 }
 
 pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
-    let ret: Vec<Pkg> = vec![];
+    let mut ret: Vec<Pkg> = vec![];
 
     let pkg_cache = root.join("System").join("Cache").join("Packages");
     let index = root
@@ -128,7 +128,7 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
         .join("Cache")
         .join("Packages")
         .join("index");
-    let index_str = fs::read_to_string(&index).unwrap();
+    let index_str = fs::read_to_string(&index).expect("Failed to read index");
 
     for line in index_str.lines() {
         let parts = line.split(" ").collect::<Vec<&str>>();
@@ -136,7 +136,8 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
             continue;
         }
 
-        let pkg_list = fs::read_to_string(parts[0]).unwrap();
+        let pkg_list = fs::read_to_string(parts[0])
+			.expect(format!("Failed to read package list '{}'", parts[0]).as_str());
 
         let mut name = String::new();
         let mut version = String::new();
@@ -148,12 +149,34 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
         let mut enhances = String::new();
         let mut description = String::new();
         let mut maintainer = String::new();
+		let mut homepage = String::new();
+		let mut path = String::new();
 
         let mut block: String = "".to_string();
         for line in pkg_list.lines() {
             if line.starts_with("Package: ") {
                 block = "".to_string();
                 // info!("{}", line);
+
+				// We will also handle the case of the (potential) previous package
+				if name != "".to_string() {
+					let pkg = Pkg {
+						name: name.clone(),
+						version: PackageVersion::parse(&version.clone()).unwrap(),
+						arch: arch.clone(),
+						deps: deps.clone(),
+						recommends: recommends.clone(),
+						suggests: suggests.clone(),
+						pre_depends: pre_depends.clone(),
+						enhances: enhances.clone(),
+						description: description.clone(),
+						maintainer: maintainer.clone(),
+						homepage: homepage.clone(),
+						path: Path::new(&path).to_path_buf(),
+					};
+					ret.push(pkg);
+				}
+
                 line[9..].clone_into(&mut name)
             } else if line.starts_with("Version: ") {
                 block = "".to_string();
@@ -190,9 +213,10 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
             } else if line.starts_with("Homepage: ") {
                 block = "".to_string();
                 // info!("{}", line);
-                line[10..].clone_into(&mut maintainer)
+                line[10..].clone_into(&mut homepage)
             } else if line.starts_with("Description: ") {
                 block = "Description".to_string();
+				// info!("{}", line);
                 line[13..].clone_into(&mut description)
             } else if line.starts_with(" ") {
                 if block != "".to_string() {
@@ -200,7 +224,11 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
                         description.push_str(&format!("{}\n", &line[1..]));
                     }
                 }
-            }
+            } else if line.starts_with("Filename: ") {
+				block = "".to_string();
+				// info!("{}", line);
+				line[10..].clone_into(&mut path)
+			}
         }
     }
     Ok(ret)

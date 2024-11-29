@@ -1,6 +1,7 @@
 use crate::system;
 use debian_packaging::package_version::PackageVersion;
 use log::{debug, error, info, warn};
+use std::fmt::Display;
 use std::fs::File;
 use std::process::ExitStatus;
 use std::{
@@ -10,18 +11,24 @@ use std::{
 use temp_dir::TempDir;
 
 pub struct Pkg {
-    name: String,
-    version: PackageVersion,
-    arch: String,
-    deps: String,
-    recommends: String,
-    suggests: String,
-    pre_depends: String,
-    enhances: String,
-    description: String,
-    maintainer: String,
-    homepage: String,
-    path: PathBuf,
+    pub name: String,
+    pub version: PackageVersion,
+    pub arch: String,
+    pub deps: String,
+    pub recommends: String,
+    pub suggests: String,
+    pub pre_depends: String,
+    pub enhances: String,
+    pub description: String,
+    pub maintainer: String,
+    pub homepage: String,
+    pub path: PathBuf,
+}
+
+impl Display for Pkg {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}---{} {} url: {}", self.name, self.version, self.arch, self.path.display())
+	}
 }
 
 pub struct DebFile<'a> {
