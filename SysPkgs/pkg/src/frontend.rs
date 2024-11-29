@@ -29,6 +29,14 @@ pub struct PackageSelection {
     arch: Option<String>,
 }
 
+pub fn join_url(url1: &String, url2: &String) -> String {
+	if url1.ends_with("/") {
+		format!("{}{}", url1, url2)
+	} else {
+		format!("{}/{}", url1, url2)
+	}
+}
+
 /// Reads /etc/apt/sources.list and returns a Vec of PackageSources
 /// The sources.list file is of the format:
 /// source_type url dist subtype
@@ -140,9 +148,14 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
             continue;
         }
 
-        let pkg_list = match fs::read_to_string(pkg_cache.join(parts[0])) {
+		let filename = parts[0];
+		let url = parts[1];
+		let dist = parts[2];
+		let subtype = parts[3];
+
+        let pkg_list = match fs::read_to_string(pkg_cache.join(filename)) {
 			Ok(string) => string,
-			Err(e) => return Err(format!("Failed to read package list '{}'", parts[0]))
+			Err(e) => return Err(format!("Failed to read package list '{}'", filename))
 		};
 
         let mut name = String::new();
@@ -233,7 +246,7 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
             } else if line.starts_with("Filename: ") {
 				block = "".to_string();
 				// info!("{}", line);
-				line[10..].clone_into(&mut path)
+				join_url(&url.to_string(), &line[10..].to_string()).clone_into(&mut path)
 			}
         }
     }
