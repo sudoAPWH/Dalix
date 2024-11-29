@@ -8,7 +8,7 @@ use log::{debug, error, info, warn};
 
 use indicatif::{ProgressBar, ProgressStyle};
 
-use crate::backend::DebPkg;
+use crate::backend::Pkg;
 use crate::system;
 
 /// A struct representing a package source
@@ -103,10 +103,7 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
 
             index_str.push_str(&format!(
                 "{} {} {} {}\n",
-                i.to_string(),
-                source.url,
-                source.dist,
-                source.subtype
+                i, source.url, source.dist, source.subtype
             ));
 
             i += 1;
@@ -114,7 +111,7 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
     }
 
     system::touch(&pkg_cache.join("index"))?;
-    let out = fs::write(&pkg_cache.join("index"), &index_str);
+    let out = fs::write(pkg_cache.join("index"), &index_str);
     if let Err(e) = out {
         return Err(e.to_string());
     }
@@ -122,7 +119,9 @@ pub fn update_package_lists(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
-pub fn read_package_lists(root: &Path) {
+pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
+    let ret: Vec<Pkg> = vec![];
+
     let pkg_cache = root.join("System").join("Cache").join("Packages");
     let index = root
         .join("System")
@@ -136,20 +135,80 @@ pub fn read_package_lists(root: &Path) {
         if parts.len() != 4 {
             continue;
         }
+
+        let pkg_list = fs::read_to_string(parts[0]).unwrap();
+
+        let mut name = String::new();
+        let mut version = String::new();
+        let mut arch = String::new();
+        let mut deps = String::new();
+        let mut recommends = String::new();
+        let mut suggests = String::new();
+        let mut pre_depends = String::new();
+        let mut enhances = String::new();
+        let mut description = String::new();
+        let mut maintainer = String::new();
+
+        let mut block: String = "".to_string();
+        for line in pkg_list.lines() {
+            if line.starts_with("Package: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[9..].clone_into(&mut name)
+            } else if line.starts_with("Version: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[9..].clone_into(&mut version)
+            } else if line.starts_with("Architecture: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[14..].clone_into(&mut arch)
+            } else if line.starts_with("Depends: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[9..].clone_into(&mut deps)
+            } else if line.starts_with("Recommends: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[12..].clone_into(&mut recommends)
+            } else if line.starts_with("Suggests: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[11..].clone_into(&mut suggests)
+            } else if line.starts_with("Pre-Depends: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[13..].clone_into(&mut pre_depends)
+            } else if line.starts_with("Enhances: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[11..].clone_into(&mut enhances)
+            } else if line.starts_with("Maintainer: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[12..].clone_into(&mut maintainer)
+            } else if line.starts_with("Homepage: ") {
+                block = "".to_string();
+                // info!("{}", line);
+                line[10..].clone_into(&mut maintainer)
+            } else if line.starts_with("Description: ") {
+                block = "Description".to_string();
+                line[13..].clone_into(&mut description)
+            } else if line.starts_with(" ") {
+                if block != "".to_string() {
+                    if block == "Description" {
+                        description.push_str(&format!("{}\n", &line[1..]));
+                    }
+                }
+            }
+        }
     }
+    Ok(ret)
 }
 
 pub fn retrieve_package(pkg: &PackageSelection, root: &Path) -> Result<(), String> {
-    let pkg_arch = pkg.arch;
-    let pkg_version = pkg.version;
-    
-    let arch: = system.get_arch();
-    if let Some(a) = pkg_arch {
-        arch = a;
-    }
+    let arch = &pkg.arch;
+    let pkg_version = &pkg.version;
 
-    // TODO
-    
     Ok(())
-
 }

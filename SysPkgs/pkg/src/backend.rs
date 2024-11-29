@@ -9,7 +9,7 @@ use std::{
 };
 use temp_dir::TempDir;
 
-pub struct DebPkg {
+pub struct Pkg {
     name: String,
     version: PackageVersion,
     arch: String,
@@ -43,7 +43,7 @@ impl DebFile<'_> {
 ///
 /// # Arguments
 ///
-/// - `d` - A reference to a `DebPkg` struct representing the .deb package to extract.
+/// - `d` - A reference to a `Pkg` struct representing the .deb package to extract.
 /// - `out` - A reference to a `Path` specifying the output directory where the package contents will be extracted.
 ///
 /// # Returns
@@ -52,7 +52,7 @@ impl DebFile<'_> {
 ///
 /// # Example
 /// ```
-/// let deb = DebPkg {
+/// let deb = Pkg {
 ///     name: "package-name".to_string(),
 ///     version: "1.0".to_string(),
 ///     arch: "amd64".to_string(),
@@ -84,17 +84,17 @@ pub fn extract_deb(d: &DebFile, out: &Path) -> Result<(), String> {
     ))
 }
 
-/// Gets a DebPkg struct from a deb file
+/// Gets a Pkg struct from a deb file
 ///
-/// Generates a DebPkg struct based off of information in the debian control file.
+/// Generates a Pkg struct based off of information in the debian control file.
 /// Also imbeds the path field.
 ///
 /// # Arguments
-/// - `deb` The `DebFile` for which will will generate the DebPkg struct for.
+/// - `deb` The `DebFile` for which will will generate the Pkg struct for.
 ///
 /// # Returns
-/// - `DebPkg` A struct containing info about the package.
-pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
+/// - `Pkg` A struct containing info about the package.
+pub fn extract_info(deb: &DebFile) -> Result<Pkg, String> {
     let dir = TempDir::new().unwrap();
     extract_deb_full(&deb, dir.path())?;
     let mut control_file = File::open(dir.path().join("DEBIAN").join("control")).unwrap();
@@ -166,7 +166,7 @@ pub fn extract_info(deb: &DebFile) -> Result<DebPkg, String> {
         }
     }
     // info!("Description: {}", description);
-    Ok(DebPkg {
+    Ok(Pkg {
         name,
         version: PackageVersion::parse(&version).unwrap(),
         arch,
