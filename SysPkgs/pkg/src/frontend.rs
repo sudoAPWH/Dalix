@@ -128,7 +128,11 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
         .join("Cache")
         .join("Packages")
         .join("index");
-    let index_str = fs::read_to_string(&index).expect("Failed to read index");
+
+    let index_str = match fs::read_to_string(&index) {
+		Ok(string) => string,
+		Err(e) => return Err(e.to_string()),
+	};
 
     for line in index_str.lines() {
         let parts = line.split(" ").collect::<Vec<&str>>();
@@ -136,8 +140,10 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
             continue;
         }
 
-        let pkg_list = fs::read_to_string(parts[0])
-			.expect(format!("Failed to read package list '{}'", parts[0]).as_str());
+        let pkg_list = match fs::read_to_string(pkg_cache.join(parts[0])) {
+			Ok(string) => string,
+			Err(e) => return Err(format!("Failed to read package list '{}'", parts[0]))
+		};
 
         let mut name = String::new();
         let mut version = String::new();

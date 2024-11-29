@@ -52,14 +52,36 @@ fn main() {
         info!("You have requested for output-only mode...");
     }
 
-    if command == "xf" {
-        backend::extract_deb_full(&DebFile::new(&arg), Path::new(&format!("{}-dir", arg))).unwrap();
-    } else if command == "x" {
-        backend::extract_deb(&DebFile::new(&arg), Path::new(&format!("{}-dir", arg))).unwrap();
-    } else if command == "install-deb" {
-        backend::install_deb_pkg(&DebFile::new(&arg), Path::new(&args.root)).unwrap();
-    } else if command == "update" && arg == "pkg-list" {
-        frontend::update_package_lists(Path::new(&args.root)).unwrap();
-        info!("Updated package lists!");
+    match command.as_str() {
+        "xf" => {
+			backend::extract_deb_full(&DebFile::new(&arg), Path::new(&format!("{}-dir", arg))).unwrap()
+		},
+		"x" => {
+        	backend::extract_deb(&DebFile::new(&arg), Path::new(&format!("{}-dir", arg))).unwrap()
+		},
+		"ppl" => {
+			for e in frontend::read_package_lists(Path::new(&args.root)).unwrap() {
+				println!("{}", e);
+			}
+		},
+		"install-deb" => {
+			backend::install_deb_pkg(&DebFile::new(&arg), Path::new(&args.root)).unwrap();
+		},
+		"update" => {
+			match arg.as_str() {
+				"pkg-list" => {
+        			frontend::update_package_lists(Path::new(&args.root)).unwrap();
+        			info!("Updated package lists!");
+				},
+				_ => {
+					error!("Unknown argument!");
+					error!("Try `pkg --help` for more information.");
+				}
+			}
+		},
+		_ => {
+			error!("Unknown command!");
+			error!("Try `pkg --help` for more information.");
+		}
     }
 }
