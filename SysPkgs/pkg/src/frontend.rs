@@ -30,11 +30,11 @@ pub struct PackageSelection {
 }
 
 pub fn join_url(url1: &String, url2: &String) -> String {
-	if url1.ends_with("/") {
-		format!("{}{}", url1, url2)
-	} else {
-		format!("{}/{}", url1, url2)
-	}
+    if url1.ends_with("/") {
+        format!("{}{}", url1, url2)
+    } else {
+        format!("{}/{}", url1, url2)
+    }
 }
 
 /// Reads /etc/apt/sources.list and returns a Vec of PackageSources
@@ -138,9 +138,9 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
         .join("index");
 
     let index_str = match fs::read_to_string(&index) {
-		Ok(string) => string,
-		Err(e) => return Err(e.to_string()),
-	};
+        Ok(string) => string,
+        Err(e) => return Err(e.to_string()),
+    };
 
     for line in index_str.lines() {
         let parts = line.split(" ").collect::<Vec<&str>>();
@@ -148,15 +148,15 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
             continue;
         }
 
-		let filename = parts[0];
-		let url = parts[1];
-		let dist = parts[2];
-		let subtype = parts[3];
+        let filename = parts[0];
+        let url = parts[1];
+        let dist = parts[2];
+        let subtype = parts[3];
 
         let pkg_list = match fs::read_to_string(pkg_cache.join(filename)) {
-			Ok(string) => string,
-			Err(e) => return Err(format!("Failed to read package list '{}'", filename))
-		};
+            Ok(string) => string,
+            Err(e) => return Err(format!("Failed to read package list '{}'", filename)),
+        };
 
         let mut name = String::new();
         let mut version = String::new();
@@ -168,8 +168,8 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
         let mut enhances = String::new();
         let mut description = String::new();
         let mut maintainer = String::new();
-		let mut homepage = String::new();
-		let mut path = String::new();
+        let mut homepage = String::new();
+        let mut path = String::new();
 
         let mut block: String = "".to_string();
         for line in pkg_list.lines() {
@@ -177,26 +177,28 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
                 block = "".to_string();
                 // info!("{}", line);
 
-				// We will also handle the case of the (potential) previous package
-				if name != "".to_string() {
-					let pkg = Pkg {
-						name: name.clone(),
-						version: PackageVersion::parse(&version.clone()).unwrap(),
-						arch: arch.clone(),
-						deps: deps.clone(),
-						recommends: recommends.clone(),
-						suggests: suggests.clone(),
-						pre_depends: pre_depends.clone(),
-						enhances: enhances.clone(),
-						description: description.clone(),
-						maintainer: maintainer.clone(),
-						homepage: homepage.clone(),
-						path: Path::new(&path).to_path_buf(),
-					};
-					ret.push(pkg);
-				}
+                // We will also handle the case of the (potential) previous package
+                if name != "".to_string() {
+                    let pkg = Pkg {
+                        name: name.clone(),
+                        version: PackageVersion::parse(&version.clone()).unwrap(),
+                        arch: arch.clone(),
+                        deps: deps.clone(),
+                        recommends: recommends.clone(),
+                        suggests: suggests.clone(),
+                        pre_depends: pre_depends.clone(),
+                        enhances: enhances.clone(),
+                        description: description.clone(),
+                        maintainer: maintainer.clone(),
+                        homepage: homepage.clone(),
+                        path: Path::new(&path).to_path_buf(),
+                    };
+                    ret.push(pkg);
+                }
 
-                line[9..].clone_into(&mut name)
+                line.strip_prefix("Package: ")
+                    .unwrap()
+                    .clone_into(&mut name)
             } else if line.starts_with("Version: ") {
                 block = "".to_string();
                 // info!("{}", line);
@@ -235,7 +237,7 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
                 line[10..].clone_into(&mut homepage)
             } else if line.starts_with("Description: ") {
                 block = "Description".to_string();
-				// info!("{}", line);
+                // info!("{}", line);
                 line[13..].clone_into(&mut description)
             } else if line.starts_with(" ") {
                 if block != "".to_string() {
@@ -244,10 +246,10 @@ pub fn read_package_lists(root: &Path) -> Result<Vec<Pkg>, String> {
                     }
                 }
             } else if line.starts_with("Filename: ") {
-				block = "".to_string();
-				// info!("{}", line);
-				join_url(&url.to_string(), &line[10..].to_string()).clone_into(&mut path)
-			}
+                block = "".to_string();
+                // info!("{}", line);
+                join_url(&url.to_string(), &line[10..].to_string()).clone_into(&mut path)
+            }
         }
     }
     Ok(ret)
