@@ -25,9 +25,18 @@ We will detail each of these files/directories individually.
 ### config.toml
 `config.toml` is a toml file (also used in the AppBundle generation) of the format:
 ```toml
-Name = "Application Name"
-Version = "Application Version"
-Icon = "rootfs/usr/share/app/icon.png"
+name = "Application Name"
+version = "Application Version"
+icon = "rootfs/usr/share/app/icon.png"
+cmd = "command"
+
+[build]
+root = "root directory"
+distro = "debian"
+build_script = """
+apt install something
+apt satisfy whatever
+"""
 ```
 
 ### app.desktop
