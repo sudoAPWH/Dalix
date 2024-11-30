@@ -1,5 +1,40 @@
 # Applications
 
-Applications for dalixOS will be custom **AppBundles** which are detailed in this document. An AppBundle has a seperate rootfs of it's own which may cause size issues, but will always work and be reliable. (Providing the developer isn't insane...) We reccomend application developers link with musl, so-as to avoid all of the compatability issues glibc has.
+Applications for dalixOS will be custom **AppBundles** which are detailed in this document. An AppBundle has a seperate rootfs of it's own which may cause size issues, but will always work and be reliable. (Providing the developer isn't insane...) If you are an application developer, you can opt in to have your application overlayed over the users base system, which would decrease the size of your application significantly, losing some portability.
 
-AppBundles are similar to self-extracting archives, but they are more like self-mounting archives as they are data appended to a dalixOS application runtime. There is a magic string between the executable and the data which is `#AppBundle-eldnuBppA#` which the executable will look for, to find the beginning of the data.
+AppBundles are merely a modification of the AppDir spec, and as such, are AppImages. The basic root of an AppBundle's AppDir is:
+
+[SymbolBank]: # ( │	├──	└── )
+
+```
+AppDir
+├── AppRun
+├── config.toml
+├── app.desktop
+├── icon.png
+└── rootfs
+	└── ...
+```
+
+We will detail each of these files/directories individually.
+
+## Files
+### AppRun
+`AppRun` is an auto-generated script that parses configuration options in `config.toml`, bubblewraps the rootfs, and hands off control to the application.
+
+### config.toml
+`config.toml` is a toml file (also used in the AppBundle generation) of the format:
+```toml
+Name = "Application Name"
+Version = "Application Version"
+Icon = "rootfs/usr/share/app/icon.png"
+```
+
+### app.desktop
+`app.desktop` is auto-generated based off of `config.toml`
+
+### icon.png
+Basically just a symbolic link to the file specified in the `Icon` field in `config.toml`
+
+### rootfs
+`rootfs/` is the applications rootfs with the base distros root image along with all dependencies.
