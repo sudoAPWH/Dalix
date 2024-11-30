@@ -15,8 +15,7 @@ dalixOS that will be imitating the macOS look/feel.
  - **Global menu bar**: A global menu bar has been shown to be much faster then a menu bar at the top of
  the window. dalixOS will be implementing that too.
 
-And a few more including, but not limited to, Control center, spatial finder, and automatic dependency
-resolution without breakage.
+And a few more including, but not limited to, Control center, spatial finder, and installer-less AppBundles!
 
 > The goal for dalixOS is to be organized, stable, user friendly, and just work.
 

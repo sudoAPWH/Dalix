@@ -72,17 +72,11 @@ sudo mv base/!(boot) mnt/
 sudo mv base/boot/* mnt/boot/
 sudo rm -Rf base
 ls mnt
-sudo cp Resources/dalixos-base.deb mnt/root/dalixos-base.deb
 
 
 # Preform operations inside chroot
 sudo arch-chroot mnt <<EOF
 ls root
-apt install -y /root/dalixos-base.deb
-# pkg install --no-deps $(cat Resources/basepkgs.txt)
-
-
-# ln -sfT / /System/Packages/base/root
 
 
 /sbin/adduser --home /Users/user user <<EOD
@@ -110,27 +104,6 @@ EOF
 # Generate fstab
 sudo bash -c 'Resources/genfstab.py mnt mnt/boot > mnt/etc/fstab'
 
-# Generate base package
-# ln -sfT mnt/System/Packages/base\*\*\*0.1.0 mnt/System/Packages/base*
-mkdir -p mnt/System/Packages/base---0.1.0/root
-touch mnt/System/Packages/base---0.1.0/pkg-info
-cat >> mnt/System/Packages/base---0.1.0/pkg-info <<EOF
-InfoType = 1
-[Package]
-Name = "base"
-Version = "0.1.0"
-Architecture = "amd64"
-Maintainer = "dalixOS Team"
-Description = '''
-The base package for dalixOS
-'''
-Depends = ""
-EOF
-sudo cp -r mnt/!(System|Users|Volumes|Applications|boot|dev|proc|sys|run) mnt/System/Packages/base---0.1.0/root/
-
-# sudo arch-chroot mnt <<EOF
-# chown -R user:user '/System/Packages/base---0.1.0/root'
-# EOF
 
 unset nounset
 unset errexit
