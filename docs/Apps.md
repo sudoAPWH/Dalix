@@ -47,3 +47,7 @@ Basically just a symbolic link to the file specified in the `Icon` field in `con
 
 ### rootfs
 `rootfs/` is the applications rootfs with the base distros root image along with all dependencies.
+
+## Startup
+
+When an application starts up, the AppDir is loaded and `AppRun` is executed. `AppRun` will then configure enviroment variables, read the config, and `bwrap` into the rootfs with the system root (`/`) optionally overlayed over top.
