@@ -29,6 +29,7 @@ name = "Application Name"
 version = "Application Version"
 icon = "rootfs/usr/share/app/icon.png"
 cmd = "command"
+catagories = "Utility;"
 
 [build]
 root = "root directory"
@@ -48,6 +49,24 @@ Basically just a symbolic link to the file specified in the `Icon` field in `con
 ### rootfs
 `rootfs/` is the applications rootfs with the base distros root image along with all dependencies.
 
+## Creation
+
+First, `app.desktop`, `icon.png`, and `rootfs/` are copied/generated. Then, `AppRun` is generated of the format:
+
+```sh
+mkdir -p work
+
+# Could be this...
+fuse-overlayfs -o lowerdir=/,upperdir=rootfs,workdir=work merged
+# Or this...
+ls -sfT rootfs merged
+
+bwrap --bind merged / {cmd}
+
+# If fuse-overlay was used
+umount merged
+```
+
 ## Startup
 
-When an application starts up, the AppDir is loaded and `AppRun` is executed. `AppRun` will then configure enviroment variables, read the config, and `bwrap` into the rootfs with the system root (`/`) optionally overlayed over top.
+When an application starts up, the AppDir is loaded and `AppRun` is executed. `AppRun` will then configure enviroment variables, read the config, and `bwrap` into the rootfs with the system root (`/`) optionally overlayed underneath using `fuse-overlayfs`
