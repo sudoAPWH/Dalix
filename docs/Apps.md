@@ -56,8 +56,8 @@ First, `app.desktop`, `icon.png`, and `rootfs/` are copied/generated. Then, `App
 ```sh
 #!/bin/bash
 # Make temp directories
-work = $(mktemp -d)
-merged = $(mktemp -d)
+work=$(mktemp -d)
+merged=$(mktemp -d)
 
 # Overlayfs / underneath rootfs and put that into merged
 fuse-overlayfs -o lowerdir=/,upperdir=rootfs,workdir=${work} ${merged}
@@ -65,7 +65,7 @@ fuse-overlayfs -o lowerdir=/,upperdir=rootfs,workdir=${work} ${merged}
 # Chroot (sorta) into the merged directory and allow the user to specify a command optionaly.
 bwrap --bind ${merged} / ${1:-command}
 
-umount merged
+umount ${merged}
 
 rm -Rf ${work}
 rm -Rf ${merged}
