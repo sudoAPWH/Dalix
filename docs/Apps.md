@@ -54,17 +54,21 @@ Basically just a symbolic link to the file specified in the `Icon` field in `con
 First, `app.desktop`, `icon.png`, and `rootfs/` are copied/generated. Then, `AppRun` is generated of the format:
 
 ```sh
-mkdir -p work
+#!/bin/bash
+# Make temp directories
+work = $(mktemp -d)
+merged = $(mktemp -d)
 
-# Could be this...
-fuse-overlayfs -o lowerdir=/,upperdir=rootfs,workdir=work merged
-# Or this...
-ls -sfT rootfs merged
+# Overlayfs / underneath rootfs and put that into merged
+fuse-overlayfs -o lowerdir=/,upperdir=rootfs,workdir=${work} ${merged}
 
-bwrap --bind merged / {cmd}
+# Chroot (sorta) into the merged directory and allow the user to specify a command optionaly.
+bwrap --bind ${merged} / ${1:-command}
 
-# If fuse-overlay was used
 umount merged
+
+rm -Rf ${work}
+rm -Rf ${merged}
 ```
 
 ## Startup
