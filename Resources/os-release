@@ -1,8 +1,0 @@
-NAME="dalixOS"
-PRETTY_NAME="dalixOS 0.1.0 (Hydrogen)"
-ID=dalix
-VERSION_CODENAME=hydrogen
-HOME_URL="https://figsystems.github.io/dalixOS"
-LOGO=dalixos-logo
-VENDOR_NAME="FigSystems"
-ARCHITECTURE="amd64"
