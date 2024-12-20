@@ -8,10 +8,6 @@ versions without conflict. Installing new software will be a breeze. Drop an App
 (```.deb``` or ```.app```) into the ``` Applications ``` folder, and dalixOS will convert it into an app.
 Letting you do what you need, without wrestling with difficult cli package managers.
 
-
-dalixOS will also automatically clean up unused dependencies so your disk isn’t filled up with unused
-files!
-
 We are currently under heavy development so expect [issues](https://github.com/dleggo/Dalix/issues).
 
 See our [homepage](https://figsystems.github.io/dalixOS/) for more information!
